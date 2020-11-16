@@ -1,0 +1,17 @@
+# ignore this one
+# .gitignore
+
+# xemacs backup files
+*.*~
+
+# windows copies
+* - Copy.php
+
+# never make these public
+login.php
+
+# ignore these directories
+tests
+# sampletable
+
+bike_template.php
