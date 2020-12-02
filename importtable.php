@@ -44,10 +44,42 @@ class importtable extends datatable
       $file=$file['tmp_name'];
     } else {
       $file_info=pathinfo($file);
-      $file_info['size']=filesize($file);
-    }
+      if(filter_var($file_info['dirname'], FILTER_VALIDATE_URL))	{
+	if(!filter_var($file, FILTER_VALIDATE_URL))	{
+	  exit("$file is not an url");
+	}
+	$curl = curl_init($file);
+	//don't fetch the actual page, you only want headers
+	curl_setopt($curl, CURLOPT_NOBODY, true);
+	//stop it from outputting stuff to stdout
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
-    $file_info['date']=filemtime($file);
+	// attempt to retrieve the modification date
+	curl_setopt($curl, CURLOPT_FILETIME, true);
+
+	$result = curl_exec($curl);
+
+	if ($result === false) {
+	  die (curl_error($curl)); 
+	}
+
+	$file_info['size'] = curl_getinfo($curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+	$file_info['date'] = curl_getinfo($curl, CURLINFO_FILETIME);
+	curl_close($curl);
+
+      }	else {
+	$file_info['size']=filesize($file);
+	$file_info['date']=filemtime($file);
+      }
+    }
+    if(!isset($file_info['date']))	{
+      if($file_info['extension']=='php')	{
+	$file_info['date']=time();
+      }
+      else {
+	$file_info['date']=filemtime($file);
+      }
+    }
     $file_info['datestr']=gmdate("Y-m-d H:i:s", date($file_info['date']));
 
     $this->file_info=$file_info;
@@ -273,7 +305,7 @@ class importtable extends datatable
 
     $this->opts=$opts;
     $this->nrows=count($importtable);
-    $this->ncols=count($importtable[0]);
+    $this->ncols=empty($importtable) ? 0 : count($importtable[0]);
     $this->data=$importtable;
   }
 

@@ -212,7 +212,9 @@ class datatable
 _TABLE;
 
     foreach(array_keys($this->data[0]) as $column) {
-      $table .= "\n      <th data-field='$column'>$column</th>";
+      //      $col=str_replace(' ','_',$column);
+      $col=$column;
+      $table .= "\n      <th data-field='$col'>$column</th>";
     }
 
     $table .= <<<_TABLE
@@ -232,7 +234,7 @@ _TABLE;
     var data = 
 _TABLE;
     
-    $table .= $this->json()."\n    ";
+    $table .= $this->json(TRUE)."\n    ";
     
     $table .= '$table.bootstrapTable({data: data})';
 
