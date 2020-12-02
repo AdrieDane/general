@@ -15,6 +15,41 @@ class datatable
   }
 
 
+  /*    Title: 	select
+   Purpose:	
+   Created:	Tue Dec 01 12:48:03 2020
+   Author: 	Adrie Dane
+  */
+  function select($idx,$field=NULL,$where=array())
+  {
+    if(!empty($where))	{
+      $keys=array();
+      foreach($idx as $i) {
+	foreach($where as $k => $v) {
+	  if(!isset($this->data[$i][$k]) || 
+	     $this->data[$i][$k]!=$v)	{
+	    continue;
+	  }
+	}
+	$keys[]=$i;
+      }
+    } else {
+      $keys=$idx;
+    }
+
+    $arr=array();
+    if(is_null($field))	{
+      foreach($keys as $k) {
+	$arr[]=$this->data[$k];
+      }
+    } else {
+      foreach($keys as $k) {
+	$arr[]=$this->data[$k][$field];
+      }
+    }
+    return $arr;
+  } /* select */
+
   public function update($key_value=array(),$where=array(),$idx=array()) 
   {
     if(empty($key_value))	{
@@ -25,9 +60,9 @@ class datatable
     }
     foreach($idx as $i) {
       $update=TRUE;
-      foreach($where as $k1 => $v1) {
-	if(!isset($this->data[$i][$k1]) || 
-	   $this->data[$i][$k1]!=$v1)	{
+      foreach($where as $k => $v) {
+	if(!isset($this->data[$i][$k]) || 
+	   $this->data[$i][$k]!=$v)	{
 	  $update=FALSE;
 	  break;
 	}
