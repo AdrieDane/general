@@ -15,6 +15,31 @@ class datatable
   }
 
 
+  public function update($key_value=array(),$where=array(),$idx=array()) 
+  {
+    if(empty($key_value))	{
+      return;
+    }
+    if(empty($idx))	{
+      $idx=array_keys($this->data);
+    }
+    foreach($idx as $i) {
+      $update=TRUE;
+      foreach($where as $k1 => $v1) {
+	if(!isset($this->data[$i][$k1]) || 
+	   $this->data[$i][$k1]!=$v1)	{
+	  $update=FALSE;
+	  break;
+	}
+      }
+      if($update==TRUE)	{
+	foreach($key_value as $k => $v) {
+	  $this->data[$i][$k]=$v;
+	}
+      }
+    }
+  }
+
   // if intersect==TRUE: removes all fields not present in both tables
   function append($table2,$intersect=FALSE) 
   {
