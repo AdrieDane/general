@@ -304,7 +304,7 @@ class importtable extends datatable
     }
 
     $this->opts=$opts;
-    $this->nrows=count($importtable);
+    //    $this->nrows=count($importtable);
     $this->ncols=empty($importtable) ? 0 : count($importtable[0]);
     $this->data=$importtable;
   }
@@ -329,7 +329,7 @@ class importtable extends datatable
     if($reset_keys)	{
       $a->data=array_values($a->data);
     }
-    $a->nrows=count($a->data);
+    //    $a->nrows=count($a->data);
 
     return $a;
   }

@@ -10,7 +10,7 @@ class datatable
   {
     $this->data=$data;
 
-    $this->nrows=count($this->data);
+    //    $this->nrows=count($this->data);
     $this->ncols=count($this->data[0]);
   }
 
@@ -44,13 +44,13 @@ class datatable
       }
     } else {
       foreach($keys as $k) {
-	$arr[]=$this->data[$k][$field];
+	$arr[$k]=$this->data[$k][$field];
       }
     }
     return $arr;
   } /* select */
 
-  public function update($key_value=array(),$where=array(),$idx=array()) 
+  public function update($idx=array(),$key_value=array(),$where=array()) 
   {
     if(empty($key_value))	{
       return;
@@ -107,7 +107,7 @@ class datatable
     } else {
       $this->data=array_merge($this->data,$table2->data);
     }
-    $this->nrows=count($this->data);
+    //    $this->nrows=count($this->data);
   }
   
 
@@ -123,10 +123,10 @@ class datatable
     }
 
     $a->data=array_filter($this->data,$fun);
-    if($reset_keys)	{
+    if($reset_keys==TRUE)	{
       $a->data=array_values($a->data);
     }
-    $a->nrows=count($a->data);
+    //    $a->nrows=count($a->data);
     
     return $a;
   }

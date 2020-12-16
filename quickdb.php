@@ -11,10 +11,11 @@ class quickdb
   static $con;
   static $named_queries;
   static $verbose=false;
+  static $login='login.php';
 
   function __construct($named_queries=TRUE)
   {
-    require_once 'login.php';
+    require_once(self::$login);
     self::$con = new mysqli($db_hostname, $db_username, $db_password, $db_database);
     if (self::$con->connect_error)
       echo "error connecting";
