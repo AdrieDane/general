@@ -1,19 +1,19 @@
 <?php
 require_once 'vendor/autoload.php';
 
-class datatable
+
+
+class datatable implements ArrayAccess, Iterator, Countable
 {
   public static $rename = array(); # Static class variable.
   public static $numcol = array(); # Static class variable.
+  // private $ix = array();
 
   public function __construct($data,$con=NULL) 
   {
     $this->data=$data;
-
-    //    $this->nrows=count($this->data);
     $this->ncols=count($this->data[0]);
   }
-
 
   /*    Title: 	select
    Purpose:	
@@ -364,8 +364,62 @@ _TABLE;
 
     return($sql);
   }
-  
 
+
+  // START Iterator interface
+  function rewind() {
+    reset($this->data);
+  }
+
+  function current() {
+    return current($this->data);
+  }
+
+  function key() {
+    return key($this->data);
+  }
+
+  function next() {
+    next($this->data);
+  }
+
+  function valid() {
+    return key($this->data) !== null;
+  }
+  // END Iterator interface 
+
+  // START ArrayAccess interface
+  public function offsetSet($offset, $value) {
+    if (is_null($offset)) {
+      $this->data[] = $value;
+    } else {
+      $this->data[$offset] = $value;
+    }
+  }
+
+  public function offsetExists($offset) {
+    return isset($this->data[$offset]);
+  }
+
+  public function offsetUnset($offset) {
+    unset($this->data[$offset]);
+  }
+
+  public function offsetGet($offset) {
+    return isset($this->data[$offset]) ? $this->data[$offset] : null;
+  }
+  // END ArrayAccess interface //
+
+  // START Countable interface
+  public function count() {
+    return count($this->data);
+  }
+  // END Countable interface
+
+  public function __toString() {
+    return get_class($this).": ".count($this->data)." elements";
+  }
+  
 
 }
 
