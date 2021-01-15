@@ -12,7 +12,7 @@ class datatable implements ArrayAccess, Iterator, Countable
   public function __construct($data,$con=NULL) 
   {
     $this->data=$data;
-    $this->ncols=count($this->data[0]);
+    //    $this->ncols=count($this->data[0]);
   }
 
   /*    Title: 	select
@@ -266,6 +266,7 @@ class datatable implements ArrayAccess, Iterator, Countable
   {
     $table = <<<_TABLE
 
+<small>
 <table id='$id'>
   <thead>
     <tr>
@@ -281,7 +282,7 @@ _TABLE;
     </tr>
   </thead>
 </table>
-
+</small>
 <script>
 
 _TABLE;

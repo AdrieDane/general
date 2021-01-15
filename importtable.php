@@ -293,7 +293,7 @@ class importtable extends datatable
     array_shift($importtable); # remove column header;
 
     // walking through the complete 2 dimensional array
-    $i=0;
+    $i=1;
     foreach($importtable as &$x) {
       $x['infile_order']=$i++;
       foreach($numcol as $field) {

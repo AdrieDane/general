@@ -97,9 +97,9 @@ class quickdb
     return $A;
   }
 
-  function select_name_value($table,$name,$value)
+  function select_name_value($table,$name,$value,$where=1)
   {
-    $A=$this->query("SELECT $name,$value FROM $table",true);
+    $A=$this->query("SELECT $name,$value FROM $table WHERE $where",true);
 
     $nvA=array();
     foreach($A as $a) {
