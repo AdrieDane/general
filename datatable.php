@@ -9,7 +9,7 @@ class datatable implements ArrayAccess, Iterator, Countable
   public static $numcol = array(); # Static class variable.
   // private $ix = array();
 
-  public function __construct($data,$con=NULL) 
+  public function __construct($data) 
   {
     $this->data=$data;
     //    $this->ncols=count($this->data[0]);

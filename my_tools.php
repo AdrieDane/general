@@ -7,5 +7,6 @@ include_once 'isetget.php';
 include_once 'datatable.php';
 include_once 'importtable.php';
 include_once 'multitable.php';
+include_once 'bstable.php';
 
 ?>
