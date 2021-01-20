@@ -10,7 +10,14 @@ class bstable extends datatable
   {
     parent::__construct($data);
     //    $this->ncols=count($this->data[0]);
-    $this->_data=$data;
+    $this->_data=array();
+
+    if(!empty($data))	{
+      $hdrs=array_keys(array_values($data)[0]);
+      $this->hdrs=array_combine(str_replace(' ','_',$hdrs),$hdrs);
+    } else {
+      $this->hdrs=array();
+    }
   }
 
 /*    Title: 	update_data
@@ -31,6 +38,8 @@ function update_data($post)
       }
     }
   }
+
+  $this->_data=[];
   return $this->data;
 } /* update_data */
 
@@ -44,16 +53,18 @@ function update_data($post)
   {
     $arr=array();
     $hdrs=array();
+
+    $this->_data = $this->data;
  
     foreach($types as $field => &$type) {
       // create dropdown
       if($type=='select')	{
-	$vals=array_unique(array_column($this->data,$field));
+	$vals=array_unique(array_column($this->_data,$field));
 	$type=$vals;
       }
     }
 
-    foreach($this->data as &$x) {
+    foreach($this->_data as &$x) {
       // do label columns first
       foreach($types as $field => &$type) {
 	if(!is_array($type) && $type=='label')	{
@@ -89,6 +100,10 @@ function update_data($post)
 
   function bootstraptable($id="table")
   {
+
+    $field=empty($this->_data) ? "data" : "_data";
+
+
     $table = <<<_TABLE
 
 <small>
@@ -119,7 +134,7 @@ _TABLE;
     var data = 
 _TABLE;
     
-    $table .= $this->json(TRUE)."\n    ";
+    $table .= $this->json(TRUE,$field)."\n    ";
     
     $table .= '$table.bootstrapTable({data: data})';
 
