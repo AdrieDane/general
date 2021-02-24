@@ -262,7 +262,8 @@ class datatable implements ArrayAccess, Iterator, Countable
     return $json;
   }
 
-  function bootstraptable($id="table")
+
+  function bootstraptable($id="table",$field="data")
   {
     $table = <<<_TABLE
 
@@ -272,7 +273,7 @@ class datatable implements ArrayAccess, Iterator, Countable
     <tr>
 _TABLE;
 
-    foreach(array_keys($this->data[0]) as $column) {
+    foreach(array_keys(reset($this->$field)) as $column) {
       //      $col=str_replace(' ','_',$column);
       $col=$column;
       $table .= "\n      <th data-field='$col'>$column</th>";
@@ -314,17 +315,54 @@ _TABLE;
 
   function csv($sep=",",$field="data")
   {
-    $data=array(implode($sep,array_keys($this->$field[0])));
+    $data=array(implode($sep,array_keys(reset($this->$field))));
     foreach($this->$field as $row) {
       array_push($data,implode($sep,array_values($row)));
     }
     return implode("\n",$data);
   }
 
+/*    Title: 	htmltable
+      Purpose:	
+      Created:	Tue Feb 02 17:31:11 2021
+      Author: 	Adrie Dane
+*/
+function htmltable($field="data")
+{
+  $cls="table";
+  $str='';
+  
+  $str.= "<table class='$cls'>\n";
+  $str.= "  <thead>\n";
+  $str.= "    <tr>\n";
+  $str.= "      <th  scope='col'>";
+  $str.= implode("</th>\n      <th  scope='col'>",array_keys(reset($this->$field)));
+  $str.= "</th>\n";
+  $str.= "    </tr>\n";
+  $str.= "  </thead>\n";
+
+  $str.= "  <tbody>\n";
+  foreach($this->$field as $x) {
+    $str.= "    <tr>\n";
+    $str.= "      <td>";
+    $str.= implode("</td>\n      <td>",$x);
+    $str.= "</td>\n";
+    $str.= "    </tr>\n";
+  }
+  $str.= "  </tbody>\n";
+
+
+  $str.= "</table>\n";
+
+  return $str;
+  
+} /* htmltable */
+
+
   //('','0','Item 0','$0',''),
   function sql_old($table,$field='data')
   {
-    $sql =  "INSERT INTO `$table` (".join(', ',array_keys($this->$field[0])).") ";
+    $sql =  "INSERT INTO `$table` (".join(', ',array_keys(reset($this->$field))).") ";
     $vals=array();
     foreach($this->$field as $x) {
       $v=array();
@@ -346,7 +384,7 @@ _TABLE;
   function sql($table,$columns=array(),$field='data')
   {
     if(empty($columns))	{
-      $columns=array_keys($this->$field[0]);
+      $columns=array_keys(reset($this->$field));
     }
     $sql =  "INSERT INTO `$table` (".join(', ',$columns).") ";
     $vals=array();

@@ -36,7 +36,8 @@ class importtable extends datatable
       //      $this->data=array();
       return;
     }
-
+    //    pre_r($file,'$file');
+    
     if(is_array($file))	{
       // file was an upload
       $file_info=pathinfo($file['name']);
@@ -44,6 +45,7 @@ class importtable extends datatable
       $file=$file['tmp_name'];
     } else {
       $file_info=pathinfo($file);
+      // file is an url
       if(filter_var($file_info['dirname'], FILTER_VALIDATE_URL))	{
 	if(!filter_var($file, FILTER_VALIDATE_URL))	{
 	  exit("$file is not an url");
@@ -68,8 +70,14 @@ class importtable extends datatable
 	curl_close($curl);
 
       }	else {
-	$file_info['size']=filesize($file);
-	$file_info['date']=filemtime($file);
+	if(file_exists($file))	{	
+	  // file is a normal file
+	  $file_info['size']=filesize($file);
+	  $file_info['date']=filemtime($file);
+	  
+	} else {
+	  exit("ERROR IN importtable: <br>\nFILE: '$file' does not exist.");
+	}
       }
     }
     if(!isset($file_info['date']))	{
@@ -107,7 +115,7 @@ class importtable extends datatable
       $importtableId=$opts['importtableId'];
       //      print_r($opts);
     } else {
-      $opts = array('delim' => ',',
+      $opts = array('delim' => '',
 		    'skip_empty_header' => TRUE );
     }
 
@@ -118,6 +126,8 @@ class importtable extends datatable
     
     //print_r($options);
     // add extra options via argument
+
+    $opts['infile_order']=TRUE;
     if(!empty($options))	{
       foreach($options as $key => $value) {
 	$opts[$key]=$value;
@@ -168,6 +178,7 @@ class importtable extends datatable
     echo "statics<br>";
     */
     extract($opts);
+    //    pre_r($opts);
     
     $this->date=$file_info['date'];
 
@@ -192,7 +203,7 @@ class importtable extends datatable
       if(!is_null($sheet_or_delim))	{
 	$delim=$sheet_or_delim;
       }
-      if(empty($delim))	{
+      if(empty($delim) | is_null($delim))	{
 	$delim=detectDelimiter($file);
       }
       $importtable = array_map(function($a) use ($delim) {return str_getcsv($a,$delim);}, file($file));
@@ -286,6 +297,8 @@ class importtable extends datatable
       }
     }
 
+    //    pre_r($importtable,'$importtable');
+
     // this turns the importtable with numerical indices into an associative array
     array_walk($importtable, function(&$a) use ($importtable) {
 		 $a = array_combine($importtable[0], $a);
@@ -295,7 +308,9 @@ class importtable extends datatable
     // walking through the complete 2 dimensional array
     $i=1;
     foreach($importtable as &$x) {
-      $x['infile_order']=$i++;
+      if($opts['infile_order']==TRUE)	{
+	$x['infile_order']=$i++;
+      }
       foreach($numcol as $field) {
 	if(isset($x[$field]))	{
 	  $x[$field]=(float) $x[$field];
