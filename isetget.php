@@ -3,49 +3,79 @@
 trait isetget 
 {
 
+/*    Title: 	iinit
+      Purpose:	Inits isetget by setting 
+                - $this->ixfields = $fields
+      Created:	Wed Feb 24 08:26:13 2021
+      Author: 	Adrie Dane
+*/
+function iinit($fields=array())
+{
+  if(!is_array($fields))	{
+    $fields=array($fields);
+  }
+  if(empty($fields))	{
+    exit('Empty $fields in iinit() isetget requires existing fields');
+  }
+  $this->ixfields=$fields;
+} /* iinit */
+
+/*    Title: 	iexit
+      Purpose:	unsets $this->ix
+      Created:	Wed Feb 24 08:35:57 2021
+      Author: 	Adrie Dane
+function iexit()
+{
+  $this->ix=array();
+  unset($this->ix);
+} iexit */
+
+
+
   /*    Title: 	iindex
-   Purpose:	
+   Purpose:	Sets member 'ix' which makes it possible to set or unset 
+                properties in multiple members at once
    Created:	Mon Dec 21 11:24:49 2020
    Author: 	Adrie Dane
   */
-  function iindex($fields = NULL)
+  function iindex()
   {
-    if(is_null($fields) && isset($this->ixfields))	{
-      $fields=$this->ixfields;
-      unset($this->ix);
+    if(!isset($this->ixfields))	{
+      exit("Absent 'ixfields' member use iinit to set 'ixfields' required for isetget functionality");
     }
-    $this->ix=[];
-    $this->ixfields=$fields;
-    foreach($fields as $field) {
+    $ix=[];
+    foreach($this->ixfields as $field) {
       foreach($this->data as $key => $x) {
-	if(!isset($this->ix[$x[$field]]))	{
-	  $this->ix[$x[$field]]=array();
+	if(!isset($ix[$x[$field]]))	{
+	  $ix[$x[$field]]=array();
 	}
-	$this->ix[$x[$field]][]=$key;
+	$ix[$x[$field]][]=$key;
       }
     }
+    return $ix;
   } /* iindex */
 
   /*    Title: 	iunset
-   Purpose:	
+   Purpose:	unsets data identified by ix
    Created:	Mon Dec 21 12:05:37 2020
    Author: 	Adrie Dane
   */
   function iunset($ifields = array())
   {
+    $ix = $this->iindex();
     foreach($ifields as $field) {
-      if(!isset($this->ix[$field]))	{
+      if(!isset($ix[$field]))	{
 	continue;
       }
-      $index = is_array($field) ? $field : $this->ix[$field];
+      $index = is_array($field) ? $field : $ix[$field];
       foreach($index as $idx) {
 	unset($this->data[$idx]);
       }
       if(is_string($field))	{
-	unset($this->ix[$field]);
+	unset($ix[$field]);
       }
     }
-    $this->iindex($this->ixfields);
+    unset($ix);
   } /* iunset */
 
   /*    Title: 	iset
@@ -55,9 +85,10 @@ trait isetget
   */
   function iset($ifields = array(),$kv=array())
   {
+    $ix = $this->iindex();
     $arr=[];
     foreach($ifields as $field) {
-      $arr[]= is_array($field) ? $field : $this->ix[$field];
+      $arr[]= is_array($field) ? $field : $ix[$field];
     }
     //pre_r($arr,'arr');
     
@@ -68,6 +99,7 @@ trait isetget
 	$this->data[$i][$key]=$value;
       }
     }
+    unset($ix);
   } /* iset */
 
   /*    Title: 	iget
@@ -77,9 +109,10 @@ trait isetget
   */
   function iget($ifields = array(),$kv=array())
   {
+    $ix = $this->iindex();
     $arr=[];
     foreach($ifields as $field) {
-      $arr[]= is_array($field) ? $field : $this->ix[$field];
+      $arr[]= is_array($field) ? $field : $ix[$field];
     }
     $idx = count($arr)==1 ? $arr[0] : array_intersect(...$arr);
     $result=[];
@@ -96,7 +129,7 @@ trait isetget
 
 	//	pre_r($idx,'idx_filter');
 	//	$result->data=$arr;
-	$result->iindex();
+	//	$result->iindex();
       } else {
 	foreach($idx as $i) {
 	  $result[$i]=$this->data[$i][$kv];
@@ -108,6 +141,7 @@ trait isetget
 	$result[$this->data[$i][$key]]=$this->data[$i][$kv[$key]];
       }
     }
+    unset($ix);
     return $result;
   } /* iget */
 
