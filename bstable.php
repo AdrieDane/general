@@ -98,7 +98,7 @@ function update_data($post)
   
 
 
-  function bootstraptable($id="table")
+  function bootstraptable($id="table",$field="data")
   {
 
     $field=empty($this->_data) ? "data" : "_data";
