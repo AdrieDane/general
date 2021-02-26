@@ -250,6 +250,72 @@ class datatable implements ArrayAccess, Iterator, Countable
     
   }
   
+/*    Title: 	sort
+      Purpose:	sort datatable by fields in ascending order
+      Created:	Fri Feb 26 08:04:01 2021
+      Author: 	Adrie Dane
+*/
+function sort($keys)
+{
+    usort($this->data,
+	  function($a, $b) use($keys){
+	    foreach($keys as $key) {
+	      $retval = $a[$key] <=> $b[$key];
+	      if($retval != 0)	{
+		return $retval;
+	      }
+	    }
+	    return $retval;
+	  });
+} /* sort */
+
+
+/*    Title: 	rsort
+      Purpose:	sort datatable by fields in descending order
+      Created:	Fri Feb 26 08:04:01 2021
+      Author: 	Adrie Dane
+*/
+function rsort($keys)
+{
+    usort($this->data,
+	  function($a, $b) use($keys){
+	    foreach($keys as $key) {
+	      $retval = $b[$key] <=> $a[$key];
+	      if($retval != 0)	{
+		return $retval;
+	      }
+	    }
+	    return $retval;
+	  });
+} /* rsort */
+
+/*    Title: 	msort
+      Purpose:	sort datatable by fields in mixed order depending on '-' sign
+                $keys['field1','-field2','field3']
+		sorts by field1 (ascending), 
+                         field2 (descending) and 
+                         field3 (ascending)
+      Created:	Fri Feb 26 08:04:01 2021
+      Author: 	Adrie Dane
+*/
+function msort($keys)
+{
+    usort($this->data,
+	  function($a, $b) use($keys){
+	    foreach($keys as $key) {
+	      if(substr($key,0,1) == '-')	{
+		$k=substr($key,1);
+		$retval = $b[$k] <=> $a[$k];
+	      } else {
+		$retval = $a[$key] <=> $b[$key];
+	      }
+	      if($retval != 0)	{
+		return $retval;
+	      }
+	    }
+	    return $retval;
+	  });
+} /* msort */
 
 
   function json($pretty=FALSE,$field="data")
