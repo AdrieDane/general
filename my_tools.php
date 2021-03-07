@@ -9,5 +9,6 @@ include_once 'importtable.php';
 include_once 'multitable.php';
 include_once 'bstable.php';
 include_once 'repo.php';
+include_once 'Blob.php';
 
 ?>
