@@ -93,31 +93,13 @@ class Blob
 
   if ( file_put_contents($fname, $this->contents)
        ===FALSE) {
-    exit("Could not create sampletable from BLOB");
+    exit("Could not create $obj_str from BLOB");
   }else{
     $obj = new $obj_str($fname,...$args);
     unlink($fname);
     return $obj;
   }
 } /* as_object */
-
-
-
-
-
-
-
-/*    Title: 	blob
-      Purpose:	
-      Created:	Sat Mar 06 13:04:46 2021
-      Author: 	Adrie Dane
-*/
-function blob()
-{
-  return mysqli::real_escape_string($this->contents);
-} /* blob */
-
-
 
 
 

@@ -127,7 +127,7 @@ class importtable extends datatable
     //print_r($options);
     // add extra options via argument
 
-    $opts['infile_order']=TRUE;
+    $opts['infile_order']=FALSE;
     if(!empty($options))	{
       foreach($options as $key => $value) {
 	$opts[$key]=$value;
