@@ -86,12 +86,25 @@ function iexit()
   function iset($ifields = array(),$kv=array())
   {
     $ix = $this->iindex();
+
+    // reformat fields uniformly into array $arr [] if field not in $ix
     $arr=[];
+    foreach($ifields as $field) {
+      if(is_array($field))	{ // field was already an array of indices
+	$arr[] = $field;
+      } else {
+	$arr[]= in_array($field,$ix) ? $ix[$field] : [];
+      }
+    }
+
+    //pre_r($arr,'arr');
+
+    /*  old version ERROR when field not in $ix  $arr=[];
     foreach($ifields as $field) {
       $arr[]= is_array($field) ? $field : $ix[$field];
     }
-    //pre_r($arr,'arr');
-    
+    */
+
     $idx = count($arr)==1 ? $arr[0] : array_intersect(...$arr);
     //pre_r($idx,'idx');
     foreach($idx as $i) {
@@ -109,11 +122,21 @@ function iexit()
   */
   function iget($ifields = array(),$kv=array())
   {
+    // create associative array
+    // $ix[field] => $idx 
+    // in which $idx is an array of indices matching field
     $ix = $this->iindex();
+
+    // reformat fields uniformly into array $arr [] if field not in $ix
     $arr=[];
     foreach($ifields as $field) {
-      $arr[]= is_array($field) ? $field : $ix[$field];
+      if(is_array($field))	{ // field was already an array of indices
+	$arr[] = $field;
+      } else {
+	$arr[]= in_array($field,$ix) ? $ix[$field] : [];
+      }
     }
+
     $idx = count($arr)==1 ? $arr[0] : array_intersect(...$arr);
     $result=[];
 
