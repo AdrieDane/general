@@ -20,6 +20,10 @@ function detectDelimiter($file)
   return array_search(max($delimiters), $delimiters);
 }
 
+/*
+ options skiprows: integer
+*/
+
 
 class importtable extends datatable
 {
@@ -37,7 +41,6 @@ class importtable extends datatable
       return;
     }
     //    pre_r($file,'$file');
-    
     if(is_array($file))	{
       // file was an upload
       $file_info=pathinfo($file['name']);
@@ -134,6 +137,12 @@ class importtable extends datatable
       }
     }
 
+    if(isset($opts['sheet']))	{
+      $sheet_or_delim=$opts['sheet'];
+    }
+
+
+
     if(empty(static :: $numcol) && !is_null($con) && !empty($importtableId))	{
       
       $query="SELECT `header`,`map` FROM `importhead` WHERE `importtableId`='$importtableId' AND NOT `header`=''";
@@ -182,7 +191,10 @@ class importtable extends datatable
     
     $this->date=$file_info['date'];
 
-    if(array_search(strtolower($file_info['extension']),array('xlsx','xlsm')))	{
+    //    pre_r($file_info,'$file_info');
+    
+
+    if(in_array(strtolower($file_info['extension']),array('xlsx','xlsm')))	{
       if(!is_null($sheet_or_delim))	{
 	$sheet=$sheet_or_delim;
       }
@@ -199,6 +211,11 @@ class importtable extends datatable
       $xlsx->skipEmptyRows=TRUE;
       $importtable=$xlsx->rows($sheet_idx);
       $this->sheet=$sheets[$sheet_idx];
+
+      //      pre_r($importtable,'$importtable');
+      
+      //      exit("xlsx");
+      
     } else {
       if(!is_null($sheet_or_delim))	{
 	$delim=$sheet_or_delim;
@@ -215,6 +232,11 @@ class importtable extends datatable
     foreach($importtable as &$row) {
       $row = array_map('trim',$row);
     }
+
+    if(isset($opts['skiprows']))	{
+      $importtable=array_slice($importtable,$opts['skiprows']);
+    }
+
 
     // header must have at least half of the cells filled
     // this skips the rows where only one or two cells are filled
@@ -296,8 +318,6 @@ class importtable extends datatable
 	}
       }
     }
-
-    //    pre_r($importtable,'$importtable');
 
     // this turns the importtable with numerical indices into an associative array
     array_walk($importtable, function(&$a) use ($importtable) {
