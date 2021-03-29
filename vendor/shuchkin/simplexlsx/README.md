@@ -1,13 +1,18 @@
-# SimpleXLSX class 0.8.15 (Official)
-[<img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.herokuapp.com%2Fshuchkin" />](https://www.patreon.com/shuchkin) [<img src="https://img.shields.io/github/license/shuchkin/simplexlsx" />](https://github.com/shuchkin/simplexlsx/blob/master/license.md) [<img src="https://img.shields.io/github/stars/shuchkin/simplexlsx" />](https://github.com/shuchkin/simplexlsx/stargazers) [<img src="https://img.shields.io/github/forks/shuchkin/simplexlsx" />](https://github.com/shuchkin/simplexlsx/network) [<img src="https://img.shields.io/github/issues/shuchkin/simplexlsx" />](https://github.com/shuchkin/simplexlsx/issues)
+# SimpleXLSX class 0.8.21 (Official)
+[<img src="https://img.shields.io/github/license/shuchkin/simplexlsx" />](https://github.com/shuchkin/simplexlsx/blob/master/license.md) [<img src="https://img.shields.io/github/stars/shuchkin/simplexlsx" />](https://github.com/shuchkin/simplexlsx/stargazers) [<img src="https://img.shields.io/github/forks/shuchkin/simplexlsx" />](https://github.com/shuchkin/simplexlsx/network) [<img src="https://img.shields.io/github/issues/shuchkin/simplexlsx" />](https://github.com/shuchkin/simplexlsx/issues)
+[<img src="https://img.shields.io/opencollective/all/simplexlsx" />](https://opencollective.com/simplexlsx)
+[<img src="https://img.shields.io/badge/patreon-_-_" />](https://www.patreon.com/shuchkin)
 
 Parse and retrieve data from Excel XLSx files. MS Excel 2007 workbooks PHP reader.
-No addiditional extensions need (internal unzip + standart SimpleXML parser)
-(!) XLSX only, see MS Excel 97 php reader [here](https://github.com/shuchkin/simplexls).  
+No addiditional extensions need (internal unzip + standart SimpleXML parser).
 
-**Sergey Shuchkin** <sergey.shuchkin@gmail.com> 2010-2020<br/>
+See also:<br/>
+[SimpleXLS](https://github.com/shuchkin/simplexls) old format MS Excel 97 php reader.<br/>
+[SimpleXLSXGen](https://github.com/shuchkin/simplexlsxgen) xlsx php writer.  
 
-*Hey, bro, please ★ the package for my motivation :)* 
+**Sergey Shuchkin** <sergey.shuchkin@gmail.com>  2010-2021 <br/>
+
+*Hey, bro, please ★ the package for my motivation :)*<br/>
 
 ## Basic Usage
 ```php
@@ -258,6 +263,11 @@ SimpleXLSX::ParseErrno(), $xlsx->errno()<br/>
 </table>	
 
 ## History
+v0.8.20 (2021-01-11) libxml_disable_entity_loader and PHP 8, thx [iKlsR](https://github.com/shuchkin/simplexlsx/issues/96) <br/>
+v0.8.19 (2020-07-28) fixed empty shared strings xml<br/>
+v0.8.18 (2020-07-21) fixed hyperlinks<br/>
+v0.8.17 (2020-06-15) fixed version number, added relative pathes a/../b support in relations<br/>
+v0.8.16 (2020-06-14) fixed abs pathes in relations<br/>
 v0.8.15 (2020-04-28) fixed LibreOffice xml specificity, thx [stephengmatthews](https://github.com/shuchkin/simplexlsx/issues/77) <br/>
 v0.8.14 (2020-04-03) fixed Office for Mac relations<br/>
 v0.8.13 (2020-02-19) removed skipEmptyRows property (xml optimization always), added static parseFile & parseData<br/>
