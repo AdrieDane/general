@@ -1,5 +1,5 @@
 <?php
-require_once 'vendor/autoload.php';
+  //require_once 'vendor/autoload.php';
 
 /**
 * $file: character separated text file
@@ -195,9 +195,43 @@ class importtable extends datatable
     
 
     if(in_array(strtolower($file_info['extension']),array('xlsx','xlsm')))	{
+
       if(!is_null($sheet_or_delim))	{
 	$sheet=$sheet_or_delim;
+      } else {
+	$sheet=0;
       }
+      $excelsheet = new Excelsheet($file,$sheet);
+      $importtable = $excelsheet->data();
+      $this->sheet=$excelsheet->name();
+      /*
+      // PhpSpreadsheet
+      $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
+
+      $sheets = $spreadsheet -> getSheetNames();
+      if(!(empty($sheet) || is_null($sheet)) && in_array($sheet,$sheets))	{
+	$spreadsheet->setActiveSheetIndexByName($sheet);
+      } else {
+	$spreadsheet->setActiveSheetIndex(0);
+      }
+      $sheet = $spreadsheet->getActiveSheet();
+      $importtable = $sheet->toArray();
+
+      // remove empty rows and columns from the end
+      $row=count($importtable)-1;
+      while(!array_filter($importtable[$row]))	{
+	unset($importtable[$row]);
+	$row--;
+      }
+      $col=count($importtable[0])-1;
+      while(!array_filter(array_column($importtable,$col)))	{
+	foreach($importtable as &$x) {
+	  unset($x[$col]);
+	}
+	$col--;
+      }
+
+      // SimpleXLSX
       $xlsx = new SimpleXLSX($file);
       $sheet_idx=0;
       $sheets=$xlsx -> sheetNames();
@@ -214,7 +248,7 @@ class importtable extends datatable
 
       //      pre_r($importtable,'$importtable');
       
-      //      exit("xlsx");
+    exit("xlsx");      */  
       
     } else {
       if(!is_null($sheet_or_delim))	{

@@ -1,82 +1,6 @@
 <?php
-require_once 'vendor/autoload.php';
+  // require_once 'vendor/autoload.php';
 
-/*    Title: 	control_str
-      Purpose:	returns html code for a control
-      Created:	Sun Mar 28 09:44:33 2021
-      Author: 	Adrie Dane
-*/
-function control_str($type,$options=[])
-{
-  $opts=['name' => '',
-	 'value' => '',
-	 'tooltip' => '',
-	 'width' => '',
-	 'rows' => '',
-	 'default' => '',
-	 'choices' => '',
-	 'array' => 1];
-
-  foreach($options as $key => $val) {
-    $opts[$key]=$val;
-  }
-  //  pre_r($opts,"$type");
-  foreach($opts as $key => $val) {
-    if(empty($val))	{
-      unset($opts[$key]);
-    }
-  }
-  extract($opts);
-  //echo $type;
-  
-  
-  if($type=='select' && isset($opts['choices']))	{
-    //  extract($opts);
-    $str = "<select name='$name'>\n";
-    foreach($choices as $choice) {
-      if(empty($choice))	{
-	continue;
-      }
-	$str .= "<option value='$choice'";
-	$str .= isset($value) && $choice==$value ?
-	  " selected>" : ">";
-	$str .= "$choice</option>\n";
-    }
-    $str .= "</select>\n";
-  } elseif($type=='textarea')	{
-    $str = "<textarea name='".$opts['name']."' rows='$rows' style='width:100%;'></textarea>\n";
-  } else {
-    $str='';
-    $width= $array==1 ? 100 : floor(98/$array);
-    for(	$i=0;	$i<$array;	$i++)	{
-      $str .= "<input type='$type'";
-      $attributes=array_intersect(['name'],array_keys($opts));
-      foreach($attributes as $attr) {
-	$str .=  " $attr='".$opts[$attr]."'";
-	unset($opts[$attr]);
-      }
-      if(isset($value) && !empty($value))	{
-	$str .=  is_numeric($value) ? " value=$value" : " value='$value'";
-      }
-    
-      $str .= $type == "date" ? ">" : " style='width:$width%;'>\n";
-
-      
-    }
-    // $str .=  ">";
-    
-  }
-  
-
-  if(isset($tooltip))	{
-    // data-html='true'
-    return "<span data-toggle='tooltip' data-placement='auto'  title='$tooltip' style='width:100%;'>\n".
-      $str."</span>\n";
-  } else {
-    return "<span style='width:100%;'>\n".
-      $str."</span>\n";
-  }
-} /* control_str */
 
 
 /*
@@ -86,7 +10,7 @@ function control_str($type,$options=[])
         use small fonts
     - 'header' true|false
         skip header row
-    - 'hide_column' array('key','tooltip','td')
+    - 'hide_column' array('key','tooltip','td','required')
 */
 class bstable extends datatable
 {
@@ -95,7 +19,7 @@ class bstable extends datatable
   {
     $opts=['small' => true,
 	   'header' => true,
-	   'hide_column' => ['key','tooltip','td'],
+	   'hide_column' => [],
 	   'id' => 'table',
 	   'cls' => 'table-sm table-hover',
 	   'column_width' => [],
@@ -140,68 +64,6 @@ function update_data($post)
   $this->_data=[];
   return $this->data;
 } /* update_data */
-
-/*    Title: 	set_controls
-      Purpose:	
-      Created:	Sat Mar 27 10:53:14 2021
-      Author: 	Adrie Dane
-*/
-function set_controls($field, $name, $tooltip='')
-{
-  $input_types=["button", "checkbox", "color", "date", "datetime-local", "email", 
-		"file", "hidden", "image", "month", "number", "password", "radio", 
-		"range", "reset", "search", "submit", "tel", "text", "time", 
-		"url", "week","textarea"];
-  
-  $arr=array();
-  $hdrs=array();
-
-  $this->_data = $this->data;
-
-  
-  foreach($this->_data as &$x) {
-    //    pre_r($x);
-    
-    // handle multiple input
-    if(is_numeric($x[$field]))	{
-      $type='textarea';
-      $opts=['name' => $x[$name],
-	     'rows' => $x[$field],
-	     'tooltip' => $x['tooltip']];
-      //      pre_r($opts,$type);
-      //      $x[$field] = control_str($type,$opts)."<br>";
-      $x[$field] = control_str($type,$opts);
-      
-    } elseif(substr($x[$field],0,1)=='[')	{
-      $parts=explode(']',substr($x[$field],1));
-      list($type,$count)=$parts;
-      $str = control_str($type,['name' => $x[$name]."[]",
-				 'tooltip' => $x['tooltip'],
-				 'array' => $count]);
-      /*      $str='';
-      for(	$i=0;	$i<$count;	$i++)	{
-	//	$str .= control_str($type,['name' => $x[$name]."[]",
-	//				   'tooltip' => $x['tooltip']])."<br>";
-	$str .= control_str($type,['name' => $x[$name]."[]",
-				   'tooltip' => $x['tooltip']]);
-				   }*/
-      $x[$field]=$str;
-    } elseif(strpos($x[$field],'|')!==false) {
-      $opts=explode('|',$x[$field]);
-      $str = control_str('select',['name' => $x[$name],
-				    'value' => $opts[0],
-				    'choices' => $opts,
-				    'tooltip' => $x['tooltip']])."<br>";
-      $x[$field] = $str;
-    } elseif(in_array($x[$field],$input_types)) {
-      $type=$x[$field];
-      $x[$field] = control_str($type,['name' => $x[$name],
-				      'tooltip' => $x['tooltip']]);
-    }
-  }
-  ;
-} /* set_controls */
-
 
 
 
