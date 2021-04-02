@@ -30,7 +30,8 @@ function control_str($type,$options=[])
   }
   extract($opts);
   //echo $type;
-  
+
+
   
   if($type=='select' && isset($opts['choices']))	{
     //  extract($opts);
@@ -46,8 +47,21 @@ function control_str($type,$options=[])
     }
     $str .= "</select>\n";
   } elseif($type=='textarea')	{
-    $str = "<textarea name='".$opts['name']."' rows='$rows' style='width:100%;'></textarea>\n";
+    $str = "<textarea name='".$opts['name']."' rows='$rows' style='width:100%;'>";
+    $str .= isset($value) ? $value : '';
+    $str .= "</textarea>\n";
   } else {
+    if($type=='date' && isset($value))	{
+      $sh = new Excelsheet();
+      if(is_array($value))	{
+	foreach($value as &$v) {
+	  $v = is_numeric($v) ? $sh->form_dateconvert($v) : $v;
+	}
+      }	elseif(is_numeric($value)) {
+	$value=$sh->form_dateconvert($value);
+      }
+    }
+
     $str='';
     $width= $array==1 ? 100 : floor(98/$array);
     for(	$i=0;	$i<$array;	$i++)	{
@@ -69,14 +83,12 @@ function control_str($type,$options=[])
 	}
       }
     
+      //  $str .= $type == "date" ? " placeholder='dd-mm-yyyy'>" : " style='width:$width%;'>\n";
       $str .= $type == "date" ? ">" : " style='width:$width%;'>\n";
-
       
     }
     // $str .=  ">";
-    
   }
-  
 
   if(isset($tooltip))	{
     // data-html='true'
@@ -111,16 +123,17 @@ class Bsform extends bstable
       $keys[$k] = $x['key'];
     }
     $x['value'] = '';
+    $x['control']='';
   }
   $tbl->data=array_combine($keys,$tbl->data);
 
   parent :: __construct( $tbl->data,['header' => false,
 				     'small' => false,
 				     'column_width' => [30, 70],
-				     'hide_column' => ['key','tooltip','td','value'],
+				     'hide_column' => ['key','tooltip','td','value','input'],
 				     'form' => true]);
 
-  $this->set_controls('input','key'); 
+  $this->set_controls('input','key','control'); 
   
 }
 
@@ -130,7 +143,7 @@ class Bsform extends bstable
       Created:	Sat Mar 27 10:53:14 2021
       Author: 	Adrie Dane
 */
-function set_controls($field, $name, $tooltip='')
+function set_controls($field, $name, $control='control')
 {
   $input_types=["button", "checkbox", "color", "date", "datetime-local", "email", 
 		"file", "hidden", "image", "month", "number", "password", "radio", 
@@ -140,10 +153,10 @@ function set_controls($field, $name, $tooltip='')
   $arr=array();
   $hdrs=array();
 
-  $this->_data = $this->data;
+  //  $this->_data = $this->data;
 
   
-  foreach($this->_data as &$x) {
+  foreach($this->data as &$x) {
     //    pre_r($x);
     
     // handle multiple input
@@ -153,7 +166,7 @@ function set_controls($field, $name, $tooltip='')
 	     'rows' => $x[$field],
 	     'tooltip' => $x['tooltip'],
 	     'value' => $x['value']];
-      $x[$field] = control_str($type,$opts);
+      $x[$control] = control_str($type,$opts);
       
     } elseif(substr($x[$field],0,1)=='[')	{
       $parts=explode(']',substr($x[$field],1));
@@ -162,7 +175,7 @@ function set_controls($field, $name, $tooltip='')
 				 'tooltip' => $x['tooltip'],
 				'array' => $count,
 				'value' => $x['value']]);
-      $x[$field]=$str;
+      $x[$control]=$str;
     } elseif(strpos($x[$field],'|')!==false) {
       $opts=explode('|',$x[$field]);
       $val = empty($x['value']) ? $opts[0] : $x['value'];
@@ -170,10 +183,10 @@ function set_controls($field, $name, $tooltip='')
 				    'value' => $val,
 				    'choices' => $opts,
 				    'tooltip' => $x['tooltip']])."<br>";
-      $x[$field] = $str;
+      $x[$control] = $str;
     } elseif(in_array($x[$field],$input_types)) {
       $type=$x[$field];
-      $x[$field] = control_str($type,['name' => $x[$name],
+      $x[$control] = control_str($type,['name' => $x[$name],
 				      'tooltip' => $x['tooltip'],
 				      'value' => $x['value']]);
     }
