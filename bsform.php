@@ -4,7 +4,7 @@
       Created:	Sun Mar 28 09:44:33 2021
       Author: 	Adrie Dane
 */
-function control_str($type,$options=[])
+function control_str($type,$options=[],$err_warn=[])
 {
   $opts=['name' => '',
 	 'value' => '',
@@ -31,7 +31,16 @@ function control_str($type,$options=[])
   extract($opts);
   //echo $type;
 
-
+  $error='';
+  $warning='';
+  if(!empty($err_warn))	{
+    if(isset($err_warn['error']) && !empty($err_warn['error']))	{
+      $error="<br><b><span class='text-danger'>".$err_warn['error']."</span></b>";
+    }
+    if(isset($err_warn['warning']) && !empty($err_warn['warning']))	{
+      $warning="<br><b><span class='text-warning'>".$err_warn['warning']."</span></b>";
+    }      
+  }
   
   if($type=='select' && isset($opts['choices']))	{
     //  extract($opts);
@@ -92,12 +101,13 @@ function control_str($type,$options=[])
 
   if(isset($tooltip))	{
     // data-html='true'
-    return "<span data-toggle='tooltip' data-placement='auto'  title='$tooltip' style='width:100%;'>\n".
+    $str = "<span data-toggle='tooltip' data-placement='auto'  title='$tooltip' style='width:100%;'>\n".
       $str."</span>\n";
   } else {
-    return "<span style='width:100%;'>\n".
-      $str."</span>\n";
+    $str = "<span style='width:100%;'>\n".$str."</span>\n";
   }
+
+  return $str.$error.$warning;
 } /* control_str */
 
 class Bsform extends bstable
@@ -124,13 +134,16 @@ class Bsform extends bstable
     }
     $x['value'] = '';
     $x['control']='';
+    $x['warning'] = '';
+    $x['error']='';
   }
   $tbl->data=array_combine($keys,$tbl->data);
 
   parent :: __construct( $tbl->data,['header' => false,
 				     'small' => false,
 				     'column_width' => [30, 70],
-				     'hide_column' => ['key','tooltip','td','value','input'],
+				     'hide_column' => ['key','tooltip','td','value','input',
+						       'error','warning'],
 				     'form' => true]);
 
   $this->set_controls('input','key','control'); 
@@ -166,7 +179,7 @@ function set_controls($field, $name, $control='control')
 	     'rows' => $x[$field],
 	     'tooltip' => $x['tooltip'],
 	     'value' => $x['value']];
-      $x[$control] = control_str($type,$opts);
+      $x[$control] = control_str($type,$opts,$x);
       
     } elseif(substr($x[$field],0,1)=='[')	{
       $parts=explode(']',substr($x[$field],1));
@@ -174,7 +187,7 @@ function set_controls($field, $name, $control='control')
       $str = control_str($type,['name' => $x[$name]."[]",
 				 'tooltip' => $x['tooltip'],
 				'array' => $count,
-				'value' => $x['value']]);
+				'value' => $x['value']],$x);
       $x[$control]=$str;
     } elseif(strpos($x[$field],'|')!==false) {
       $opts=explode('|',$x[$field]);
@@ -182,13 +195,13 @@ function set_controls($field, $name, $control='control')
       $str = control_str('select',['name' => $x[$name],
 				    'value' => $val,
 				    'choices' => $opts,
-				    'tooltip' => $x['tooltip']])."<br>";
+				   'tooltip' => $x['tooltip']],$x);
       $x[$control] = $str;
     } elseif(in_array($x[$field],$input_types)) {
       $type=$x[$field];
       $x[$control] = control_str($type,['name' => $x[$name],
 				      'tooltip' => $x['tooltip'],
-				      'value' => $x['value']]);
+					'value' => $x['value']],$x);
     }
   }
   ;

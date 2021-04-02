@@ -83,6 +83,52 @@ function form_dateconvert($value)
   }
 } /* form_dateconvert */
 
+/*    Title: 	column_convert
+ Purpose:	converts between column number and column letter
+ Created:	Fri Apr 02 11:15:58 2021
+ Author: 	Adrie Dane
+*/
+function column_convert($c,$options=[])
+{
+  $opts=['uppercase' => true,
+	 'base' => 1];
+  if(!empty($options))	{
+    foreach($options as $key => $value) {
+      $opts[$key]=$value;
+    }
+  }
+
+  extract($opts);
+  
+  $A=ord('A');
+
+  if(is_numeric($c))	{
+    $c = intval($c)-$base+1;
+    
+    if ($c <= 0) return '';
+
+    $letter = '';
+    while($c != 0){
+      $p = ($c - 1) % 26;
+      $c = intval(($c - $p) / 26);
+      $letter = chr($A + $p) . $letter;
+    }
+    return $uppercase==true ? $letter : strtolower($letter);
+  } else {
+    // subtract 1
+    $A -= 1;
+    $pow=0;
+    $num=0;
+    $chars=array_reverse(str_split(strtoupper($c)));
+    foreach($chars as $char) {
+      $num += (ord($char)-$A)*pow(26,$pow);
+      $pow++;
+    }
+    return $num+$base-1;
+  }
+  
+
+} /* column_convert */
 
 
 
