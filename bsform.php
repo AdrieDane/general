@@ -4,24 +4,8 @@
       Created:	Sun Mar 28 09:44:33 2021
       Author: 	Adrie Dane
 */
-function control_str($type,$options=[],$err_warn=[])
+function control_str($type,$opts=[])
 {
-  $opts=['name' => '',
-	 'value' => '',
-	 'tooltip' => '',
-	 'width' => '',
-	 'rows' => '',
-	 'default' => '',
-	 'choices' => '',
-	 'array' => 1];
-
-  if(!empty($options))	{
-    $keys=array_intersect(array_keys($opts),array_keys($options));
-    foreach($keys as $key) {
-      $opts[$key]=$options[$key];
-    }
-  }
-
   //  pre_r($opts,"$type");
   foreach($opts as $key => $val) {
     if(empty($val))	{
@@ -33,14 +17,13 @@ function control_str($type,$options=[],$err_warn=[])
 
   $error='';
   $warning='';
-  if(!empty($err_warn))	{
-    if(isset($err_warn['error']) && !empty($err_warn['error']))	{
-      $error="<br><b><span class='text-danger'>".$err_warn['error']."</span></b>";
-    }
-    if(isset($err_warn['warning']) && !empty($err_warn['warning']))	{
-      $warning="<br><b><span class='text-warning'>".$err_warn['warning']."</span></b>";
-    }      
+
+  if(isset($opts['error']) && !empty($opts['error']))	{
+    $error="<br><b><span class='text-danger'>".$opts['error']."</span></b>";
   }
+  if(isset($opts['warning']) && !empty($opts['warning']))	{
+    $warning="<br><b><span class='text-warning'>".$opts['warning']."</span></b>";
+  }      
   
   if($type=='select' && isset($opts['choices']))	{
     //  extract($opts);
@@ -112,17 +95,27 @@ function control_str($type,$options=[],$err_warn=[])
 
 class Bsform extends bstable
 {
+  use Optionsarray;
   public function __construct($file='',$options=[]) 
 {
- 
-  $sheet = [];
-  if(isset($options['sheet']))	{
-    $sheet =  ['sheet' => $options['sheet']];
-    unset($options['sheet']);
-  }
-  $tbl = new importtable($file,
-			 $sheet);
+  $opts=['header' => false,
+	 'small' => false,
+	 'column_width' => [30, 70],
+	 'hide_column' => ['key','tooltip','td','value','input',
+			   'error','warning'],
+	 'form' => true,
+	 'sheet' => '',
+	 'skipemptyrows' => false];
 
+  if(!is_array($options) && !empty($options))	{
+    $opts['sheet']=$options;
+  } else {
+    $opts=$this->useroptions($opts,$options);
+  }
+  
+  $tbl = new importtable($file,$opts);
+  //  pre_r($tbl,'$tbl');
+  
   $keys=array_keys($tbl->data);
   $keys=array_combine($keys,$keys);
   foreach($tbl->data as $k => &$x) {
@@ -132,31 +125,61 @@ class Bsform extends bstable
       $x['td'] = 'td';
       $keys[$k] = $x['key'];
     }
-    $x['value'] = '';
-    $x['control']='';
-    $x['warning'] = '';
-    $x['error']='';
   }
   $tbl->data=array_combine($keys,$tbl->data);
 
-  parent :: __construct( $tbl->data,['header' => false,
-				     'small' => false,
-				     'column_width' => [30, 70],
-				     'hide_column' => ['key','tooltip','td','value','input',
-						       'error','warning'],
-				     'form' => true]);
+  parent :: __construct( $tbl->data,$opts);
 
-  $this->set_controls('input','key','control'); 
+  $this->set_controls(); 
   
 }
+
+/*    Title: 	set_controls
+ Purpose:	
+ Created:	Sat Apr 03 16:26:46 2021
+ Author: 	Adrie Dane
+*/
+function set_controls()
+{
+  foreach($this->data as &$x) {
+    $opts=['width' => '',
+           'rows' => '',
+           'default' => '',
+           'choices' => '',
+           'array' => 1];
+
+    $type=$x['input'];
+    foreach(['value','error','value','tooltip'] as $field) {
+      $opts[$field]=$x[$field];
+    }
+    $opts['name']=$x['key'];
+
+    if(is_numeric($x['input'])) {
+      $type='textarea';
+      $opts['rows']=$x['input'];
+    } elseif(substr($x['input'],0,1)=='[')	{
+      $parts=explode(']',substr($x['input'],1));
+      list($type,$count)=$parts;
+      $opts['name'] .= "[]";
+      $opts['array']= $count;
+    } elseif(strpos($x['input'],'|')!==false) {
+      $type='select';
+      $opts['choices']=explode('|',$x['input']);
+      $opts['value'] = empty($x['value']) ? $opts[0] : $x['value'];
+    }
+    $x['control']=control_str($type,$opts);
+  
+  }
+} /* set_controls */
+
 
 
 /*    Title: 	set_controls
       Purpose:	
       Created:	Sat Mar 27 10:53:14 2021
       Author: 	Adrie Dane
-*/
-function set_controls($field, $name, $control='control')
+*
+function set_controls()
 {
   $input_types=["button", "checkbox", "color", "date", "datetime-local", "email", 
 		"file", "hidden", "image", "month", "number", "password", "radio", 
@@ -167,45 +190,46 @@ function set_controls($field, $name, $control='control')
   $hdrs=array();
 
   //  $this->_data = $this->data;
-
+  //  pre_r($this->data,'$this->data');
+  
   
   foreach($this->data as &$x) {
     //    pre_r($x);
     
     // handle multiple input
-    if(is_numeric($x[$field]))	{
+    if(is_numeric($x['input']))	{
       $type='textarea';
-      $opts=['name' => $x[$name],
-	     'rows' => $x[$field],
+      $opts=['name' => $x['key'],
+	     'rows' => $x['input'],
 	     'tooltip' => $x['tooltip'],
 	     'value' => $x['value']];
-      $x[$control] = control_str($type,$opts,$x);
+      $x['control'] = control_str($type,$opts,$x);
       
-    } elseif(substr($x[$field],0,1)=='[')	{
-      $parts=explode(']',substr($x[$field],1));
+    } elseif(substr($x['input'],0,1)=='[')	{
+      $parts=explode(']',substr($x['input'],1));
       list($type,$count)=$parts;
-      $str = control_str($type,['name' => $x[$name]."[]",
+      $str = control_str($type,['name' => $x['key']."[]",
 				 'tooltip' => $x['tooltip'],
 				'array' => $count,
 				'value' => $x['value']],$x);
-      $x[$control]=$str;
-    } elseif(strpos($x[$field],'|')!==false) {
-      $opts=explode('|',$x[$field]);
+      $x['control']=$str;
+    } elseif(strpos($x['input'],'|')!==false) {
+      $opts=explode('|',$x['input']);
       $val = empty($x['value']) ? $opts[0] : $x['value'];
-      $str = control_str('select',['name' => $x[$name],
+      $str = control_str('select',['name' => $x['key'],
 				    'value' => $val,
 				    'choices' => $opts,
 				   'tooltip' => $x['tooltip']],$x);
-      $x[$control] = $str;
-    } elseif(in_array($x[$field],$input_types)) {
-      $type=$x[$field];
-      $x[$control] = control_str($type,['name' => $x[$name],
+      $x['control'] = $str;
+    } elseif(in_array($x['input'],$input_types)) {
+      $type=$x['input'];
+      $x['control'] = control_str($type,['name' => $x['key'],
 				      'tooltip' => $x['tooltip'],
 					'value' => $x['value']],$x);
     }
   }
   ;
-} /* set_controls */
+} * set_controls */
 
 
 /*    Title: 	update_data

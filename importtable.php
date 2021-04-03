@@ -27,11 +27,13 @@ function detectDelimiter($file)
 
 class importtable extends datatable
 {
+  use Optionsarray;
+
   public static $rename = array(); # Static class variable.
   public static $numcol = array(); # Static class variable.
   public static $reqcol = array(); # Static class variable.
 
-  public function __construct($file=NULL,$options=array(),$con=NULL,$table_class=NULL,$sheet_or_delim=NULL) 
+  public function __construct($file=NULL,$options=array(),$con=NULL,$table_class=NULL) 
   {
 
     // print_r($con);
@@ -40,6 +42,20 @@ class importtable extends datatable
       //      $this->data=array();
       return;
     }
+
+    $default_options=['delim' => '',
+		      'skip_empty_header' => true,
+		      'infile_order' => false,
+		      'sheet' => '',
+		      'skiprows' => 0,
+		      'skipemptyrows' => true,
+		      'rename' => [],
+		      'numeric' => [],
+		      'required' => []];
+		      
+		      
+
+
     //    pre_r($file,'$file');
     if(is_array($file))	{
       // file was an upload
@@ -95,9 +111,6 @@ class importtable extends datatable
 
     $this->file_info=$file_info;
 
-    $this->sheet='';
-    $this->delim='';
-
     /*    
     echo "FILEINFO<br>";
     print_r($file_info);
@@ -118,30 +131,24 @@ class importtable extends datatable
       $importtableId=$opts['importtableId'];
       //      print_r($opts);
     } else {
-      $opts = array('delim' => '',
-		    'skip_empty_header' => TRUE );
+      $opts = [];
     }
+    
 
-
-
+    $opts=$this->useroptions($default_options,$opts);
+    $opts=$this->useroptions($default_options,$options);
 
     //    $this->print('file_info');
     
     //print_r($options);
     // add extra options via argument
-
+    /*
     $opts['infile_order']=FALSE;
     if(!empty($options))	{
       foreach($options as $key => $value) {
 	$opts[$key]=$value;
       }
-    }
-
-    if(isset($opts['sheet']))	{
-      $sheet_or_delim=$opts['sheet'];
-    }
-
-
+      }*/
 
     if(empty(static :: $numcol) && !is_null($con) && !empty($importtableId))	{
       
@@ -196,69 +203,19 @@ class importtable extends datatable
 
     if(in_array(strtolower($file_info['extension']),array('xlsx','xlsm')))	{
 
-      if(!is_null($sheet_or_delim))	{
-	$sheet=$sheet_or_delim;
-      } else {
-	$sheet=0;
-      }
-      $excelsheet = new Excelsheet($file,$sheet);
+      $excelsheet = new Excelsheet($file,['sheet' => $opts['sheet']]);
       $importtable = $excelsheet->data();
-      $this->sheet=$excelsheet->name();
-      /*
-      // PhpSpreadsheet
-      $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
-
-      $sheets = $spreadsheet -> getSheetNames();
-      if(!(empty($sheet) || is_null($sheet)) && in_array($sheet,$sheets))	{
-	$spreadsheet->setActiveSheetIndexByName($sheet);
-      } else {
-	$spreadsheet->setActiveSheetIndex(0);
-      }
-      $sheet = $spreadsheet->getActiveSheet();
-      $importtable = $sheet->toArray();
-
-      // remove empty rows and columns from the end
-      $row=count($importtable)-1;
-      while(!array_filter($importtable[$row]))	{
-	unset($importtable[$row]);
-	$row--;
-      }
-      $col=count($importtable[0])-1;
-      while(!array_filter(array_column($importtable,$col)))	{
-	foreach($importtable as &$x) {
-	  unset($x[$col]);
-	}
-	$col--;
-      }
-
-      // SimpleXLSX
-      $xlsx = new SimpleXLSX($file);
-      $sheet_idx=0;
-      $sheets=$xlsx -> sheetNames();
-      if(!(empty($sheet) || is_null($sheet)))	{
-	$sheet_idx=array_search($sheet,$sheets);
-      }
-      if($sheet_idx===FALSE)	{
-	// get first sheet by default
-	$sheet_idx=0;
-      }
-      $xlsx->skipEmptyRows=TRUE;
-      $importtable=$xlsx->rows($sheet_idx);
-      $this->sheet=$sheets[$sheet_idx];
-
-      //      pre_r($importtable,'$importtable');
+      // pre_r($importtable,'importtable');
       
-    exit("xlsx");      */  
+      $opts['sheet']=$excelsheet->name();
       
     } else {
-      if(!is_null($sheet_or_delim))	{
-	$delim=$sheet_or_delim;
-      }
+      $delim=$opts['delim'];
       if(empty($delim) | is_null($delim))	{
 	$delim=detectDelimiter($file);
       }
       $importtable = array_map(function($a) use ($delim) {return str_getcsv($a,$delim);}, file($file));
-      $this->delim=$delim;
+      $opts['delim']=$delim;
     }
     //        $this->print('sheet');
 
@@ -267,10 +224,9 @@ class importtable extends datatable
       $row = array_map('trim',$row);
     }
 
-    if(isset($opts['skiprows']))	{
+    if(isset($opts['skiprows']) && $opts['skiprows']>0)	{
       $importtable=array_slice($importtable,$opts['skiprows']);
     }
-
 
     // header must have at least half of the cells filled
     // this skips the rows where only one or two cells are filled
@@ -288,7 +244,9 @@ class importtable extends datatable
     }
 
     // remove empty rows
-    $importtable=array_filter($importtable, function ($a) { return !empty(array_filter($a));});
+    if($opts['skipemptyrows']==true)	{
+      $importtable=array_filter($importtable, function ($a) { return !empty(array_filter($a));});
+    }
 
     // remove columns with empty headers
     if($skip_empty_header)	{
