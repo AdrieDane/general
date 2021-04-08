@@ -20,6 +20,7 @@ class bstable extends datatable
     $opts=['small' => true,
 	   'header' => true,
 	   'hide_column' => [],
+	   'show_column' => [],
 	   'id' => 'table',
 	   'cls' => 'table-sm table-hover',
 	   'column_width' => [],
@@ -135,7 +136,15 @@ function html($field="data")
   $str .= $small==true ? "<small>\n" : "";
   $str .= "<table id='$id' class='table $cls'>\n";
 
-  $cols = array_diff(array_keys(reset($this->$field)),$hide_column);
+  $cols = array_keys(reset($this->$field));
+
+  if(!empty($hide_column))	{
+    $cols = array_diff($cols,$hide_column);
+  }
+
+  if(!empty($show_column))	{
+    $cols = array_intersect($cols,$show_column);
+  }
 
   if($header==true)	{
     $str.= "  <thead>\n";
