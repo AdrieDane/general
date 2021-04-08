@@ -6,25 +6,37 @@ define("FORM_DATE_FORMAT", "Y-m-d");
   //require_once 'vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-// use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class Excelsheet
 {
+  use Optionsarray;
+
   public function __construct($file=NULL,$options=array())  {
 
     if(is_null($file))	{
-      $this->filename="No file loaded just an interface to public functions";
+      // $this->filename="No file loaded just an interface to public functions";
       return;
     }
 
-    try {
+    // shortcut enter active sheet with default options
+    if(!is_array($options))	{
+      $options=['sheet' => $options];
+    }
 
+    $opts = $this->useroptions(['sheet' => '',
+				'dataonly' => true],$options);
+    try {
+      $this->filename='';
+      $this->sheet='';
       /**  Identify the type of $file  **/
       $inputFileType = \PhpOffice\PhpSpreadsheet\IOFactory::identify($file);
       /**  Create a new Reader of the type defined in $inputFileType  **/
       $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($inputFileType);
-      /**  Advise the Reader that we only want to load cell data  **/
-      $reader->setReadDataOnly(true);
+      if($opts['dataonly']==true)	{
+	/**  Advise the Reader that we only want to load cell data  **/
+	$reader->setReadDataOnly($opts['dataonly']);
+      }
       /**  Load $file to a Spreadsheet Object  **/
       $this->wb = $reader->load($file);
       //      $this->wb = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
@@ -32,12 +44,13 @@ class Excelsheet
       die('Error loading file: '.$e->getMessage());
     }
 
+    /*
+    $sheet = $opts->sheet;
     if(!is_array($options))	{
       $sheet=$options;
       $options=['sheet' => $sheet];
     }
     $opts=['sheet' => ''];
-
     // get user options
     if(!empty($options))	{
       $keys=array_intersect(array_keys($opts),array_keys($options));
@@ -45,6 +58,7 @@ class Excelsheet
 	$opts[$key]=$options[$key];
       }
     }
+    */
 
     $this->filename=pathinfo($file,PATHINFO_BASENAME);
     $this->set_sheet($opts['sheet']);
@@ -130,6 +144,28 @@ function column_convert($c,$options=[])
 
 } /* column_convert */
 
+/*    Title: 	set_data
+      Purpose:	
+      Created:	Thu Apr 08 12:16:02 2021
+      Author: 	Adrie Dane
+*/
+ function set_data($top_left,$data)
+ {
+   if(is_array($data))	{
+     if(is_array($top_left))	{
+       $col=$this->column_convert($top_left[1],['base' => 0]);
+       $top_left[0]++;
+       $top_left=$col.$top_left[0];
+     }
+     $this->sheet->fromArray($data,NULL,$top_left);
+   } else {
+     if(is_array($top_left))	{
+       $this->sheet->setCellValueByColumnAndRow($top_left[1]+1,$top_left[0]+1, $data);
+     } else {
+       $this->sheet->setCellValue($top_left,$data);
+     }
+   }
+ } /* set_data */
 
 
 
@@ -253,6 +289,21 @@ function all_data()
   }
   return $data;
 } /* all_data */
+
+/*    Title: 	update
+      Purpose:	
+      Created:	Tue Apr 06 14:35:16 2021
+      Author: 	Adrie Dane
+*/
+function download()
+{
+  header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  header('Content-Disposition: attachment;filename="myfile.xlsx"');
+  header('Cache-Control: max-age=0');
+//  header('Content-Disposition: attachment; filename="'. urlencode($this->filename).'"');
+  $writer = new Xlsx($this->wb);
+  $writer->save('php://output');
+} /* update */
 
 
 }
