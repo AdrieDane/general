@@ -12,7 +12,7 @@
         skip header row
     - 'hide_column' array('key','tooltip','td','required')
 */
-class bstable extends datatable
+class Bsdata extends datatable
 {
   
   public function __construct($data,$options=[]) 
@@ -32,15 +32,68 @@ class bstable extends datatable
     parent::__construct($data);
     //    $this->ncols=count($this->data[0]);
     $this->_data=array();
-
     if(!empty($data))	{
       $hdrs=array_keys(array_values($data)[0]);
       $this->hdrs=array_combine(str_replace(' ','_',$hdrs),$hdrs);
+      //array_keys(reset($data))
     } else {
       $this->hdrs=array();
     }
+    $this->cell_style=[];
     $this->options=$opts;
   }
+
+/*    Title: 	set_style
+      Purpose:	
+      Created:	Wed Apr 21 10:24:17 2021
+      Author: 	Adrie Dane
+*/
+function set_style($rkey,$ckey,$key,$value=true)
+{
+  $this->cell_style[$rkey][$ckey][$key]=$value;
+} /* set_class */
+
+/*    Title: 	cell_class
+      Purpose:	
+      Created:	Wed Apr 21 10:43:42 2021
+      Author: 	Adrie Dane
+*/
+function cell_class($rkey,$ckey)
+{
+  if(!isset($this->cell_style[$rkey][$ckey]))	{
+    return '';
+  }
+  $str= 
+  $cls=[];
+  foreach($this->cell_style[$rkey][$ckey] as $k => $v) {
+    if($k=='error')	{
+      $cls[]= $v==true ? 'bg-danger' : 'table-danger';
+    } elseif($k=='warning')	{
+      $cls[]= $v==true ? 'bg-warning' : 'table-warning';
+    } elseif($k=='auto')	{
+      $cls[]= $v==true ? 'bg-primary' : 'table-primary';
+    }
+  }
+  return empty($cls) ? "" : " class='".implode(" ",$cls)."'";
+} /* cell_class */
+
+/*    Title: 	get_cell_control
+      Purpose:	
+      Created:	Thu Apr 22 17:04:43 2021
+      Author: 	Adrie Dane
+*/
+function get_cell_empty($rkey,$ckey)
+{
+
+  if(!isset($this->cell_style[$rkey][$ckey]['empty']))	{
+    return false;
+  }
+  
+  return "<input type='hidden' name='".str_replace(' ','_',$ckey).
+	    "[]' value='".$this->data[$rkey][$ckey]."'>";
+} /* get_cell_control */
+
+
 
 /*    Title: 	update_data
       Purpose:	
@@ -53,6 +106,9 @@ function update_data($post)
   $data_keys=array_keys($hdrs);
   foreach($post as $key => $values) {
     if(in_array($key,$data_keys))	{
+      /*foreach($values as $row => $v) {
+	$this->data[$row][$hdrs[$key]]=$v;
+	}*/
       $i=0;
       foreach($this->data as &$x) {
 	$x[$hdrs[$key]]=$values[$i];
@@ -64,6 +120,16 @@ function update_data($post)
   $this->_data=[];
   return $this->data;
 } /* update_data */
+
+/*    Title: 	array_set_input
+      Purpose:	
+      Created:	Thu Apr 22 15:47:38 2021
+      Author: 	Adrie Dane
+*/
+function array_set_input($arr)
+{
+  ;
+} /* array_set_input */
 
 
 
@@ -77,31 +143,45 @@ function set_inputs($types=array())
     $arr=array();
     $hdrs=array();
 
+    $this->options['column_type']=$types;
+
     // create a copy in _data
     $this->_data = $this->data;
 
-    $choices=array();
+    $ctrl_choices=array();
     // create dropdown if type is select
     foreach($types as $field => $type) {
+      $append=[];
+      $prepend=[];
+      if(is_array($type) && count($type)==1)	{
+	$ctrl_opts=$type;
+	$type=key($type);
+	$types[$field]=$type;
+	extract($ctrl_opts[$type]);
+	if(isset($choices))	{
+	  $ctrl_choices[$field]=$choices;
+	  continue;
+	}
+      }
       if($type=='select')	{
 	$vals=array_unique(array_column($this->_data,$field));
-	$choices[$field]=array_values($vals);
+	$ctrl_choices[$field]=array_merge($prepend,$vals,$append);
+	pre_r([$field,$type,$ctrl_choices[$field]]);
       }
+      
     }
       
-    foreach($this->_data as &$x) {
+    foreach($this->_data as $row => &$x) {
       foreach($types as $key => $type) {
 	if($type=='select')	{
 	  $str = "<select name='".$key."[]'>";
-	  foreach($choices[$key] as $value) {
+	  foreach($ctrl_choices[$key] as $value) {
 	    $str .= "<option value='$value'";
 	    $str .= $value==$x[$key] ?
 	      " selected>" : ">";
 	    $str .= "$value</option>";
 	  }
 	  $x[$key] = $str."</select>";
-	} elseif($type=='label')	{
-	  $x[$key]="<b>".$x[$key]."</b>";
 	} elseif ($type=='text')	{
 	  $value=$x[$key];
 	  $x[$key] = "<input type='$type' name='".str_replace(' ','_',$key).
@@ -112,7 +192,7 @@ function set_inputs($types=array())
     $hdrs=array_keys($types);
     $this->hdrs=array_combine(str_replace(' ','_',$hdrs),$hdrs);
 
-    echo "count: ".count($this->_data);
+    //   echo "count: ".count($this->_data);
     
 
 
@@ -172,7 +252,7 @@ function html($field="data")
   // pre_r($this->options,'opts');
   
   extract($this->options);
-
+  
   $str='';
   $str .= $small==true ? "<small>\n" : "";
   $str .= "<table id='$id' class='table $cls'>\n";
@@ -190,19 +270,19 @@ function html($field="data")
   if($header==true)	{
     $str.= "  <thead>\n";
     $str.= "    <tr>\n";
-    $str.= "      <th  scope='col'>";
+    $str.= "      <th scope='col'>";
     //    $str.= implode("</th>\n      <th  scope='col'>",array_keys(reset($this->$field)));
     if(!empty($width))	{
       ;
     }
-    $str.= implode("</th>\n      <th  scope='col'>",$cols);
+    $str.= implode("</th>\n      <th scope='col'>",$cols);
     $str.= "</th>\n";
     $str.= "    </tr>\n";
     $str.= "  </thead>\n";
   }
 
   $str.= "  <tbody>\n";
-  foreach($this->$field as $x) {
+  foreach($this->$field as $row => $x) {
     /*    $y=$x;
     if(!empty($hide_column))	{
       foreach($x as $key => $value) {
@@ -217,10 +297,19 @@ function html($field="data")
     }
     $td = isset($x['td']) ? $x['td'] : 'td';
     $str.= "    <tr>\n";
-    if(isset($column_width) && !empty($column_width))	{
+ 
+    if(true) {
       $i = 0;
       foreach($y as $key => $value) {
-	$str.= "      <$td style='width:".$column_width[$i]."%;'>$value</$td>\n";
+	$style_w = isset($column_width[$i]) && !empty($column_width[$i]) ?
+	  " style='width:".$column_width[$i]."%;'" : "";
+	$td = isset($column_type[$key]) && $column_type[$key]=='label' ?
+	  "th" : "td";
+	$scope = $td=='th' ? " scope='col'" : "";
+	$cls=$this->cell_class($row,$key);
+	$val = $this->get_cell_empty($row,$key);
+	$val = $val===false ? $value :$val;
+	$str.= "      <$td$scope$cls$style_w>$val</$td>\n";
 	$i++;
       }
     } else {

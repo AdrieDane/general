@@ -21,6 +21,7 @@ class Blob
     $this->object = !empty($opts) && in_array('object',array_keys($opts)) ?
       $opts['object'] :
       '';
+    //    $this->tmp_name='';
     $this->contents = file_get_contents($input['tmp_name']);
 
   } elseif(is_integer($input)) {
@@ -41,9 +42,22 @@ class Blob
       $this->$field = $result[$field];
     }
   }
+  //  $this->temp_file();
   
-
 } /* __construct */
+
+/*    Title: 	__destruct
+      Purpose:	
+      Created:	Fri Apr 09 11:13:56 2021
+      Author: 	Adrie Dane
+*
+function __destruct()
+{
+  if(isset($this->tmp_name) && file_exists ($this->tmp_name))	{
+    unlink($this->tmp_name);
+  }
+} * __destruct */
+
 
 /*    Title: 	to_db
       Purpose:	
@@ -74,6 +88,31 @@ class Blob
 
 
 
+/*    Title: 	as_object
+      Purpose:	
+      Created:	Sat Mar 06 12:37:34 2021
+      Author: 	Adrie Dane
+*
+function as_object($args=[],$obj_str='')
+{
+  $obj_str = empty($obj_str) ? $this->object : $obj_str;
+  if(empty($obj_str))	{
+    exit("Blob->as_object() Object type/class unknown");
+  }
+
+  $fname = $this->temp_file();
+
+  if(!file_exists ($this->tmp_name))	{
+    exit("Could not create $obj_str from BLOB");
+  }
+
+  $obj = new $obj_str($fname,...$args);
+  return $obj;
+
+}
+*/ 
+
+
 
 /*    Title: 	as_object
       Purpose:	
@@ -101,6 +140,22 @@ class Blob
   }
 } /* as_object */
 
+/*    Title: 	temp_file
+      Purpose:	
+      Created:	Fri Apr 09 10:59:40 2021
+      Author: 	Adrie Dane
+*
+function temp_file()
+{
+
+  if(isset($this->tmp_name) && file_exists ($this->tmp_name))	{
+    return $this->tmp_name;
+  }
+
+  $this->tmp_name=sys_get_temp_dir().'/'.pathinfo($this->name, PATHINFO_BASENAME);
+  file_put_contents($this->tmp_name, $this->contents);
+  return $this->tmp_name;
+} * temp_file */
 
 
 }

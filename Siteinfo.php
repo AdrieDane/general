@@ -82,7 +82,18 @@ function relative_path($file)
   return $this->to_site.$file;
 } /* relative_path */
 
+/*    Title: 	request_method
+      Purpose:	returns $_SERVER["REQUEST_METHOD"]
+      Created:	Thu Apr 15 10:46:15 2021
+      Author: 	Adrie Dane
+*/
+function request_method()
+{
+ return $_SERVER["REQUEST_METHOD"];
+} /* request_method */
+
 }
- 
+
+
 ?>
 

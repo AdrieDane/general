@@ -1,9 +1,10 @@
 <?php
-define("EXCEL_DATE_OFFESET" , 25569);
-define("SECONDS_PER_DAY" , 86400);
-define("PHP_DATE_START" , 5000000);
-define("FORM_DATE_FORMAT", "Y-m-d");
   //require_once 'vendor/autoload.php';
+
+define("EXCELSHEET_DATE_OFFESET" , 25569);
+define("EXCELSHEET_SECS_PER_DAY" , 86400);
+define("EXCELSHEET_PHP_DATE_START" , 5000000);
+define("EXCELSHEET_FORM_DATE_FORMAT", "Y-m-d");
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -26,6 +27,10 @@ class Excelsheet
 
     $opts = $this->useroptions(['sheet' => '',
 				'dataonly' => true],$options);
+
+
+    //    pre_r($opts,'$opts');
+    
     try {
       $this->filename='';
       $this->sheet='';
@@ -40,6 +45,9 @@ class Excelsheet
       /**  Load $file to a Spreadsheet Object  **/
       $this->wb = $reader->load($file);
       //      $this->wb = \PhpOffice\PhpSpreadsheet\IOFactory::load($file);
+      $this->set_sheet(0);
+      // store reader
+      $this->reader=$reader;
     } catch(\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
       die('Error loading file: '.$e->getMessage());
     }
@@ -65,6 +73,34 @@ class Excelsheet
     
   }
 
+/*    Title: 	data_only
+      Purpose:	switch setReadDataOnly 'on'=true or 'off'=false
+      Created:	Mon Apr 12 10:07:08 2021
+      Author: 	Adrie Dane
+*/
+function data_only($onoff=true)
+{
+  $this->wb->setReadDataOnly($onoff);
+} /* data_only */
+
+/*    Title: 	to_download
+      Purpose:	
+      Created:	Sun Apr 18 10:23:03 2021
+      Author: 	Adrie Dane
+*/
+function to_download($filename='hello.xlsx')
+{
+  // $this->data_only(false);
+  ob_end_clean();
+  ob_start();
+  $writer = new Xlsx($this->wb);
+  header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  header('Content-Disposition: attachment; filename="'. urlencode($filename).'"');
+  $writer->save('php://output');
+  exit;
+} /* to_download */
+
+
 /*    Title: 	date_convert
       Purpose:	Converts Excel date to PHP date and visa versa
       Created:	Fri Apr 02 09:09:17 2021
@@ -73,12 +109,12 @@ class Excelsheet
   function date_convert($value)
 {
 
-  if($value>PHP_DATE_START)	{
+  if($value>EXCELSHEET_PHP_DATE_START)	{
     // convert to Excel
-    return ($value/SECONDS_PER_DAY)+EXCEL_DATE_OFFESET;
+    return ($value/EXCELSHEET_SECS_PER_DAY)+EXCELSHEET_DATE_OFFESET;
       } else {
     // convert to PHP
-    return ($value-EXCEL_DATE_OFFESET)*SECONDS_PER_DAY;
+    return ($value-EXCELSHEET_DATE_OFFESET)*EXCELSHEET_SECS_PER_DAY;
   }
 } /* date_convert */
 
@@ -90,10 +126,10 @@ class Excelsheet
 function form_dateconvert($value)
 {
   if(is_string($value))	{
-    $t=date_create_from_format(FORM_DATE_FORMAT,$value);
+    $t=date_create_from_format(EXCELSHEET_FORM_DATE_FORMAT,$value);
     return $this->date_convert($t->getTimestamp());
   } else {
-    return date(FORM_DATE_FORMAT, $this->date_convert($value));
+    return date(EXCELSHEET_FORM_DATE_FORMAT, $this->date_convert($value));
   }
 } /* form_dateconvert */
 
@@ -149,7 +185,7 @@ function column_convert($c,$options=[])
       Created:	Thu Apr 08 12:16:02 2021
       Author: 	Adrie Dane
 */
- function set_data($top_left,$data)
+function set_data($top_left,$data)
  {
    if(is_array($data))	{
      if(is_array($top_left))	{
@@ -197,7 +233,7 @@ function set_sheet($sheet='')
       $this->wb->setActiveSheetIndexByName($sheet);
     } else {
       $str = "ERROR in Excelsheet:<br>No sheet named: $sheet in this workbook<br".
-        pre_r($sheet,'Valid Names');
+      $str .= pre_r($sheet,'Valid Names',true);
       exit($str);
     }
   }
@@ -231,7 +267,6 @@ function getdate($cell)
     
 } /* getdate */
 
-
 /*    Title: 	data
       Purpose:	At this moment returns data from complete sheet
       Created:	Wed Mar 31 08:56:08 2021
@@ -244,7 +279,10 @@ function data($options=[])
     $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($value);
     return $date;
     } */
-
+  if(is_null($this->sheet))	{
+    $this->set_sheet(0);
+  }
+  $this->reader->setReadDataOnly(TRUE);
   $data = $this->sheet->toArray();
 
   $opts=['remove_empty'=>true]; // strip empty rows and columns from the end
@@ -270,6 +308,7 @@ function data($options=[])
     }
     $col--;
   }
+  $this->reader->setReadDataOnly(FALSE);
 
   return $data;
 } /* data */
@@ -290,7 +329,7 @@ function all_data()
   return $data;
 } /* all_data */
 
-/*    Title: 	update
+/*    Title: 	download
       Purpose:	
       Created:	Tue Apr 06 14:35:16 2021
       Author: 	Adrie Dane

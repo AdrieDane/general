@@ -33,7 +33,7 @@ class importtable extends datatable
   public static $numcol = array(); # Static class variable.
   public static $reqcol = array(); # Static class variable.
 
-  public function __construct($file=NULL,$options=array(),$con=NULL,$table_class=NULL) 
+  public function __construct($file=NULL,$user_options=array(),$con=NULL,$table_class=NULL) 
   {
 
     // print_r($con);
@@ -43,148 +43,36 @@ class importtable extends datatable
       return;
     }
 
-    $default_options=['delim' => '',
-		      'skip_empty_header' => true,
-		      'infile_order' => false,
-		      'sheet' => '',
-		      'skiprows' => 0,
-		      'skipemptyrows' => true,
-		      'rename' => [],
-		      'numeric' => [],
-		      'required' => []];
-		      
-		      
-
-
-    //    pre_r($file,'$file');
-    if(is_array($file))	{
-      // file was an upload
-      $file_info=pathinfo($file['name']);
-      $file_info['tmp_name']=$file['tmp_name'];
-      $file=$file['tmp_name'];
-    } else {
-      $file_info=pathinfo($file);
-      // file is an url
-      if(filter_var($file_info['dirname'], FILTER_VALIDATE_URL))	{
-	if(!filter_var($file, FILTER_VALIDATE_URL))	{
-	  exit("$file is not an url");
-	}
-	$curl = curl_init($file);
-	//don't fetch the actual page, you only want headers
-	curl_setopt($curl, CURLOPT_NOBODY, true);
-	//stop it from outputting stuff to stdout
-	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-
-	// attempt to retrieve the modification date
-	curl_setopt($curl, CURLOPT_FILETIME, true);
-
-	$result = curl_exec($curl);
-
-	if ($result === false) {
-	  die (curl_error($curl)); 
-	}
-
-	$file_info['size'] = curl_getinfo($curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
-	$file_info['date'] = curl_getinfo($curl, CURLINFO_FILETIME);
-	curl_close($curl);
-
-      }	else {
-	if(file_exists($file))	{	
-	  // file is a normal file
-	  $file_info['size']=filesize($file);
-	  $file_info['date']=filemtime($file);
-	  
-	} else {
-	  exit("ERROR IN importtable: <br>\nFILE: '$file' does not exist.");
-	}
-      }
-    }
-    if(!isset($file_info['date']))	{
-      if($file_info['extension']=='php')	{
-	$file_info['date']=time();
-      }
-      else {
-	$file_info['date']=filemtime($file);
-      }
-    }
-    $file_info['datestr']=gmdate("Y-m-d H:i:s", date($file_info['date']));
-
-    $this->file_info=$file_info;
-
-    /*    
-    echo "FILEINFO<br>";
-    print_r($file_info);
-    */
-
-    if(is_null($table_class))	{
-      if(in_array($this->file_info['extension'],array('xlsx','xlsm')))	{
-	$table_class='xlsx_default';
-      } else {
-	$table_class='default';
-      }
+    // the $table_class argument is just a shortcut for setting this option
+    if(!is_null($table_class))	{
+      $user_options['table_class']=$table_class;
     }
 
-    if(!is_null($con) && !empty($table_class))	{
-      //print_r($con);
-      $query="SELECT * FROM `importtable` WHERE `table_class`='$table_class'";
-      $opts=$con->query($query);
-      $importtableId=$opts['importtableId'];
-      //      print_r($opts);
-    } else {
-      $opts = [];
-    }
-    
+    $opts=['importtableId' => 0,
+	   'table_class' => 'default',
+	   'file_type' => 'csv',
+	   'delim' => '',
+	   'skip_empty_header' => true,
+	   'infile_order' => false,
+	   'sheet' => '',
+	   'skiprows' => 0,
+	   'skipemptyrows' => true,
+	   'rename' => [],
+	   'numeric' => [],
+	   'required' => []];
 
-    $opts=$this->useroptions($default_options,$opts);
-    $opts=$this->useroptions($default_options,$options);
+    $opts=$this->useroptions($opts,$user_options);
 
-    //    $this->print('file_info');
-    
-    //print_r($options);
-    // add extra options via argument
-    /*
-    $opts['infile_order']=FALSE;
-    if(!empty($options))	{
-      foreach($options as $key => $value) {
-	$opts[$key]=$value;
-      }
-      }*/
+    $file = $this->set_file_info($file,$opts);
 
-    if(empty(static :: $numcol) && !is_null($con) && !empty($importtableId))	{
-      
-      $query="SELECT `header`,`map` FROM `importhead` WHERE `importtableId`='$importtableId' AND NOT `header`=''";
-      $result=$con->query($query);
-      $rename=array();
-      foreach($result as $map) {
-	$rename[$map['header']]=$map['map'];
-      }
-      if(!empty($rename))	{
-	$opts['rename']=$rename;
-	static :: $rename = $rename;
-      }
-      
-      $query="SELECT `map` FROM `importhead` WHERE `importtableId`='$importtableId' AND `num_col`=TRUE";
-      $result=$con->query($query,1);
-      $num_cols=array();
-      foreach($result as $num) {
-	array_push($num_cols,$num['map']);
-      }
-      if(!empty($num_cols))	{
-	$opts['numeric']=$num_cols;
-	static :: $numcol = $num_cols;
-      }
+    $db_opts = $this->db_options($con,$opts['table_class']);
 
-      $query="SELECT `header` FROM `importhead` WHERE `importtableId`='$importtableId' AND `req_col`=TRUE";
-      $result=$con->query($query,1);
-      $req_cols=array();
-      foreach($result as $req) {
-	array_push($req_cols,$req['header']);
-      }
-      if(!empty($req_cols))	{
-	$opts['required']=$req_cols;
-	static :: $reqcol = $req_cols;
-      }
-    }
+    //    pre_r($opts,'$opts');
+
+
+    $opts=$this->useroptions($opts,$db_opts);
+    //    pre_r($opts,'$opts**');
+
     /*    echo "statics<br>";
     echo "numeric";
     
@@ -193,22 +81,24 @@ class importtable extends datatable
     print_r(static :: $rename);
     echo "statics<br>";
     */
+
+
     extract($opts);
     //    pre_r($opts);
     
-    $this->date=$file_info['date'];
+    $this->date=$this->file_info['date'];
 
-    //    pre_r($file_info,'$file_info');
+    //    pre_r($this->file_info,'$this->file_info');
     
 
-    if(in_array(strtolower($file_info['extension']),array('xlsx','xlsm')))	{
+    if($opts['file_type']=='xlsx')	{
 
       $excelsheet = new Excelsheet($file,['sheet' => $opts['sheet']]);
       $importtable = $excelsheet->data();
       // pre_r($importtable,'importtable');
-      
-      $opts['sheet']=$excelsheet->name();
-      
+      if(empty($opts['sheet']))	{
+	$opts['sheet']=$excelsheet->name();
+      }
     } else {
       $delim=$opts['delim'];
       if(empty($delim) | is_null($delim))	{
@@ -311,6 +201,7 @@ class importtable extends datatable
       }
     }
 
+
     // this turns the importtable with numerical indices into an associative array
     array_walk($importtable, function(&$a) use ($importtable) {
 		 $a = array_combine($importtable[0], $a);
@@ -335,6 +226,135 @@ class importtable extends datatable
     $this->ncols=empty($importtable) ? 0 : count($importtable[0]);
     $this->data=$importtable;
   }
+
+/*    Title: 	db_options
+      Purpose:	read options from database
+                more options when $table_class is set
+      Created:	Sun Apr 11 09:01:42 2021
+      Author: 	Adrie Dane
+*/
+function db_options($con=null,$table_class)
+{
+
+  if(is_null($con))	{
+    return [];
+  }
+
+  $query="SELECT * FROM `importtable` WHERE `table_class`='$table_class'";
+  $opts=$con->query($query);
+  $importtableId=$opts['importtableId'];
+
+
+  if(empty(static :: $numcol) && !empty($importtableId))	{
+      
+    $query="SELECT `header`,`map` FROM `importhead` WHERE `importtableId`='$importtableId' AND NOT `header`=''";
+    $result=$con->query($query);
+    $rename=array();
+    foreach($result as $map) {
+      $rename[$map['header']]=$map['map'];
+    }
+    if(!empty($rename))	{
+      $opts['rename']=$rename;
+      static :: $rename = $rename;
+    }
+      
+    $query="SELECT `map` FROM `importhead` WHERE `importtableId`='$importtableId' AND `num_col`=TRUE";
+    $result=$con->query($query,1);
+    $num_cols=array();
+    foreach($result as $num) {
+      array_push($num_cols,$num['map']);
+    }
+    if(!empty($num_cols))	{
+      $opts['numeric']=$num_cols;
+      static :: $numcol = $num_cols;
+    }
+
+    $query="SELECT `header` FROM `importhead` WHERE `importtableId`='$importtableId' AND `req_col`=TRUE";
+    $result=$con->query($query,1);
+    $req_cols=array();
+    foreach($result as $req) {
+      array_push($req_cols,$req['header']);
+    }
+    if(!empty($req_cols))	{
+      $opts['required']=$req_cols;
+      static :: $reqcol = $req_cols;
+    }
+  }
+
+  //  pre_r($opts,'$db opts');
+
+  return $opts;
+} /* db_options */
+
+/*    Title: 	set_file_info
+      Purpose:	sets $this->fileinfo and returns $file
+      Created:	Sun Apr 11 09:46:21 2021
+      Author: 	Adrie Dane
+*/
+ function set_file_info($file,&$opts)
+{
+    //    pre_r($file,'$file');
+    if(is_array($file))	{
+      // file was an upload
+      $file_info=pathinfo($file['name']);
+      $file_info['tmp_name']=$file['tmp_name'];
+      $file=$file['tmp_name'];
+    } else {
+      $file_info=pathinfo($file);
+      // file is an url
+      if(filter_var($file_info['dirname'], FILTER_VALIDATE_URL))	{
+	if(!filter_var($file, FILTER_VALIDATE_URL))	{
+	  exit("$file is not an url");
+	}
+	$curl = curl_init($file);
+	//don't fetch the actual page, you only want headers
+	curl_setopt($curl, CURLOPT_NOBODY, true);
+	//stop it from outputting stuff to stdout
+	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+	// attempt to retrieve the modification date
+	curl_setopt($curl, CURLOPT_FILETIME, true);
+
+	$result = curl_exec($curl);
+
+	if ($result === false) {
+	  die (curl_error($curl)); 
+	}
+
+	$file_info['size'] = curl_getinfo($curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+	$file_info['date'] = curl_getinfo($curl, CURLINFO_FILETIME);
+	curl_close($curl);
+
+      }	elseif(file_exists($file))	{	
+	  // file is a normal file
+	  $file_info['size']=filesize($file);
+	  $file_info['date']=filemtime($file);
+      } else {
+	exit("ERROR IN importtable: <br>\nFILE: '$file' does not exist.");
+      }
+    }
+    if(!isset($file_info['date']))	{
+      if($file_info['extension']=='php')	{
+	$file_info['date']=time();
+      }
+      else {
+	$file_info['date']=filemtime($file);
+      }
+    }
+    $file_info['datestr']=gmdate("Y-m-d H:i:s", date($file_info['date']));
+
+    if($opts['table_class']=='default')	{
+      if(in_array($file_info['extension'],array('xlsx','xlsm')))	{
+	$opts['table_class']='xlsx_default';
+	$opts['file_type']='xlsx';
+      }
+    }
+
+    $this->file_info=$file_info;
+    return $file;
+} /* set_file_info */
+
+
 
   /*
   function append($table2) 

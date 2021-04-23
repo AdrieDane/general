@@ -22,6 +22,7 @@ class Bsform extends bstable
   } else {
     $opts=$this->useroptions($opts,$options);
   }
+  //pre_r($file);
   
   $tbl = new importtable($file,$opts);
   //  pre_r($tbl,'$tbl');
@@ -66,8 +67,14 @@ function get_mapping()
 */
 function read_excel($file=null,$sheet='',$title='A',$value='B')
 {
-  $this->excelfile = $file;
-  $xlsx = new Excelsheet($file);
+  if($file instanceof Excelsheet)	{
+    $this->excelfile = $file->filename;
+    $xlsx = $file;
+  } else {
+    $this->excelfile = $file;
+    $xlsx = new Excelsheet($file);
+  }
+
   $this->exceldata = $xlsx->data();
 
   $map = $this->get_mapping();
