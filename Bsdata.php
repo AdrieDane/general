@@ -14,7 +14,7 @@
 */
 class Bsdata extends datatable
 {
-  
+  use ValidateColumn;
   public function __construct($data,$options=[]) 
   {
     $opts=['small' => true,
@@ -53,6 +53,63 @@ function set_style($rkey,$ckey,$key,$value=true)
   $this->cell_style[$rkey][$ckey][$key]=$value;
 } /* set_class */
 
+/*    Title: 	value_to_color
+      Purpose:	
+      Created:	Sun Apr 25 07:47:12 2021
+      Author: 	Adrie Dane
+*/
+function value_to_color($value)
+{
+  switch($value)	{
+  case 'error':
+    $col = 'danger';
+    break;
+  case 'auto':
+    $col = 'primary';
+    break;
+  default:
+    $col = $value;
+    break;
+  }
+  //    echo "$value=>$col<br>";
+
+  $colors=['primary', 'secondary', 'success', 'danger', 'warning', 
+	   'info', 'light', 'dark', 'white'];
+  return in_array($col,$colors) ? $col : '';
+} /* value_to_color */
+
+
+/*    Title: 	set_control_style
+      Purpose:	Sets style of controls by class variables updates _data
+      Created:	Sun Apr 25 07:44:56 2021
+      Author: 	Adrie Dane
+*/
+function set_control_style($rkey,$ckey,$key,$value=true)
+{
+  if(!isset($this->_data[$rkey][$ckey]) || empty($this->_data))	{
+    return;
+  }
+  
+  $col = strpos($key,'text')===0 ?
+    $key :
+    'text-'.$this->value_to_color($key);
+  if(strpos($this->_data[$rkey][$ckey],"type='text'")!==false ||
+     strpos($this->_data[$rkey][$ckey],"<select")!==false)	{
+    // setting style classes on individual options doesn't work possible to use first-child etc
+    $cls = $value==true ? "class='$col font-weight-bold'" : "class='$col'";
+    $this->_data[$rkey][$ckey]=
+      str_replace(" name=",
+		  " $cls name=",
+		  $this->_data[$rkey][$ckey]);
+    if($value==true)	{
+      $this->_data[$rkey][$ckey]="<b>".$this->_data[$rkey][$ckey]."</b>";
+    }
+  }
+
+  return;
+} /* set_control_style */
+
+
 /*    Title: 	cell_class
       Purpose:	
       Created:	Wed Apr 21 10:43:42 2021
@@ -63,17 +120,18 @@ function cell_class($rkey,$ckey)
   if(!isset($this->cell_style[$rkey][$ckey]))	{
     return '';
   }
-  $str= 
+  $colors=['primary', 'secondary', 'success', 'danger', 'warning', 
+	   'info', 'light', 'dark', 'white'];
+  
   $cls=[];
   foreach($this->cell_style[$rkey][$ckey] as $k => $v) {
-    if($k=='error')	{
-      $cls[]= $v==true ? 'bg-danger' : 'table-danger';
-    } elseif($k=='warning')	{
-      $cls[]= $v==true ? 'bg-warning' : 'table-warning';
-    } elseif($k=='auto')	{
-      $cls[]= $v==true ? 'bg-primary' : 'table-primary';
+    $col=$this->value_to_color($k);
+    if(empty($col))	{
+      continue;
     }
+    $cls[]= $v==true ? "bg-$col" : "table-$col";
   }
+  //    echo empty($cls) ? "" : " class='".implode(" ",$cls)."'";
   return empty($cls) ? "" : " class='".implode(" ",$cls)."'";
 } /* cell_class */
 
@@ -100,8 +158,11 @@ function get_cell_empty($rkey,$ckey)
       Created:	Mon Jan 18 17:27:30 2021
       Author: 	Adrie Dane
 */
-function update_data($post)
+function update_data($post=null)
 {
+  if(is_null($post))	{
+    return $this->data;
+  }
   $hdrs=$this->hdrs;
   $data_keys=array_keys($hdrs);
   foreach($post as $key => $values) {
@@ -114,10 +175,16 @@ function update_data($post)
 	$x[$hdrs[$key]]=$values[$i];
 	$i++;
       }
+      unset($x);
     }
   }
 
   $this->_data=[];
+  if(isset($this->options['column_type']))	{
+    $this->set_inputs($this->options['column_type']);
+  }
+
+
   return $this->data;
 } /* update_data */
 
@@ -146,8 +213,11 @@ function set_inputs($types=array())
     $this->options['column_type']=$types;
 
     // create a copy in _data
-    $this->_data = $this->data;
-
+    $this->_data = [];
+    foreach($this->data as $x) {
+      $this->_data[]=$x;
+    }
+    // simply $this->_data=$this->data should do the same
     $ctrl_choices=array();
     // create dropdown if type is select
     foreach($types as $field => $type) {
@@ -189,6 +259,7 @@ function set_inputs($types=array())
 	}
       }
     }
+    unset($x);
     $hdrs=array_keys($types);
     $this->hdrs=array_combine(str_replace(' ','_',$hdrs),$hdrs);
 
@@ -223,6 +294,7 @@ function set_inputs($types=array())
 	  $hdrs[]=$field;
 	}
       }
+      unset($type);
     }
     $keys=str_replace(' ','_',$hdrs);
     $this->hdrs=array_combine($keys,$hdrs);
@@ -246,10 +318,11 @@ function set_inputs($types=array())
       Created:	Tue Feb 02 17:31:11 2021
       Author: 	Adrie Dane
 */
-function html($field="data")
+function html($field="_data")
 {
-  $field=empty($this->_data) ? "data" : "_data";
-  // pre_r($this->options,'opts');
+  $field= !isset($this->$field) || empty($this->$field) ? "data" : $field;
+  //pre_r($field,'$field');
+  //pre_r($this,'$thisfield');
   
   extract($this->options);
   
@@ -323,7 +396,10 @@ function html($field="data")
   $str.= "  </tbody>\n";
 
 
-  $str.= "</table>\n";
+  $str .= "</table>\n";
+$str .= "<input type='submit' value='Update Table' name='update-table'><br><br>\n";
+
+
   $str .= $small==true ? "</small>\n" : "";
 
   return $str;

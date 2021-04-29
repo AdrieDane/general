@@ -470,6 +470,22 @@ function htmltable($field="data")
     return($sql);
   }
 
+/*    Title: 	excel
+      Purpose:	writes data to current sheet
+      Created:	Wed Apr 28 07:25:59 2021
+      Author: 	Adrie Dane
+*/
+function excel($xlsx,$field="data",$top_left='A1',$head=true)
+{
+  if($head==true)	{
+    $data=array_unshift(array_keys(reset($this->$field)),$this->field);
+  }
+  if(isset($this->sheet) && !empty($this->sheet))	{
+    $xlsx->set_sheet($this->sheet);
+  }
+  $xlsx->set_data($top_left,$data);
+} /* excel */
+
 
   // START Iterator interface
   function rewind() {
