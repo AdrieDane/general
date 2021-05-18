@@ -2,7 +2,7 @@
 
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
-class Bsform extends bstable
+class Bsform extends Oldbstable
 {
   use Optionsarray;
   public function __construct($file='',$options=[]) 
@@ -267,7 +267,7 @@ function control_str($type,$opts=[])
     $warning="<br><b><span class='text-warning'>".$opts['warning']."</span></b>";
   }      
   if(isset($opts['auto']) && !empty($opts['auto']))	{
-    $auto="<br><b><span class='text-primary'>".$opts['auto']."</span></b>";
+    $auto="<br><b><span class='text-success'>".$opts['auto']."</span></b>";
   }      
   
   if($type=='select' && isset($opts['choices']))	{

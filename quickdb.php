@@ -66,7 +66,7 @@ class quickdb
 		       self::$con->error . 
 		       "<br>\nQuery:<br>\n<xmp>$query</xmp>");
 
-    # a query which doesn't return values
+    // a query which doesn't return values
     if($result===true)	{
       return $result;
     }

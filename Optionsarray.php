@@ -18,4 +18,17 @@ function useroptions($options,$user)
  
 }
 
+function useroptions($options,$user,$add=false)
+{
+  $keys=array_keys($user);
+  if($add==false)	{
+    $keys=array_intersect(array_keys($options),$keys);
+  }
+
+  foreach($keys as $key) {
+    $options[$key]=$user[$key];
+  }
+  return $options;
+} /* useroptions */
+
 ?>

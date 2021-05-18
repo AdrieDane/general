@@ -66,7 +66,7 @@ class importtable extends datatable
     $file = $this->set_file_info($file,$opts);
 
     $db_opts = $this->db_options($con,$opts['table_class']);
-
+    //    exit('test0');
     //    pre_r($opts,'$opts');
 
 
@@ -242,6 +242,7 @@ function db_options($con=null,$table_class)
 
   $query="SELECT * FROM `importtable` WHERE `table_class`='$table_class'";
   $opts=$con->query($query);
+  //  pre_r($opts,'$opts');
   $importtableId=$opts['importtableId'];
 
 
@@ -249,6 +250,7 @@ function db_options($con=null,$table_class)
       
     $query="SELECT `header`,`map` FROM `importhead` WHERE `importtableId`='$importtableId' AND NOT `header`=''";
     $result=$con->query($query);
+    //    pre_r($result,'$result');
     $rename=array();
     foreach($result as $map) {
       $rename[$map['header']]=$map['map'];
@@ -259,7 +261,7 @@ function db_options($con=null,$table_class)
     }
       
     $query="SELECT `map` FROM `importhead` WHERE `importtableId`='$importtableId' AND `num_col`=TRUE";
-    $result=$con->query($query,1);
+    $result=$con->query($query,['single_row' => false]);
     $num_cols=array();
     foreach($result as $num) {
       array_push($num_cols,$num['map']);
@@ -270,7 +272,7 @@ function db_options($con=null,$table_class)
     }
 
     $query="SELECT `header` FROM `importhead` WHERE `importtableId`='$importtableId' AND `req_col`=TRUE";
-    $result=$con->query($query,1);
+    $result=$con->query($query,['single_row' => false]);
     $req_cols=array();
     foreach($result as $req) {
       array_push($req_cols,$req['header']);

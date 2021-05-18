@@ -1,5 +1,5 @@
 <?php
-  //require_once 'vendor/autoload.php';
+//require_once 'vendor/autoload.php';
 
 
 
@@ -15,23 +15,77 @@ class datatable implements ArrayAccess, Iterator, Countable
     //    $this->ncols=count($this->data[0]);
   }
 
+  /*    Title: 	is_associative
+        Purpose:	returns true if $this->data is an associative array
+        Created:	Tue May 18 10:21:43 2021
+        Author: 	
+  */
+  function is_associative()
+  {
+    if (array() === $this->data) return false;
+    return array_keys($this->data) !== range(0, count($this->data) - 1);
+  } /* is_associative */
+
+  
+  /*    Title: 	vector
+        Purpose:	returns data as vector of merged rows
+        column_names are lost
+        Created:	Mon May 17 10:06:58 2021
+        Author: 	
+  */
+  function vector()
+  {
+    $data=[];
+    foreach($this->data as $x) {
+      $data[]=array_values($x);
+    }
+    return array_merge(...$data);
+  } /* vector */
+
+  /*    Title: 	column_names
+        Purpose:	returns keys of data columns
+        Created:	Mon May 17 09:54:25 2021
+        Author: 	
+  */
+  function column_names()
+  {
+    return array_keys(reset($this->data));
+  } /* column_names */
+
+  /*    Title: 	columns
+        Purpose:	return datatable object with only selected columns
+        Created:	Mon May 17 09:41:07 2021
+        Author: 	
+  */
+  function columns($columns,$array=false)
+  {
+    $data=[];
+    foreach($this->data as $row => $x) {
+      foreach($columns as $column) {
+        $data[$row][$column]=$x[$column];
+      }
+    }
+    return $array==true ? $data : new datatable($data);
+  } /* columns */
+
+  
   /*    Title: 	select
-   Purpose:	
-   Created:	Tue Dec 01 12:48:03 2020
-   Author: 	Adrie Dane
+        Purpose:	
+        Created:	Tue Dec 01 12:48:03 2020
+        Author: 	Adrie Dane
   */
   function select($idx,$field=NULL,$where=array())
   {
     if(!empty($where))	{
       $keys=array();
       foreach($idx as $i) {
-	foreach($where as $k => $v) {
-	  if(!isset($this->data[$i][$k]) || 
-	     $this->data[$i][$k]!=$v)	{
-	    continue;
-	  }
-	}
-	$keys[]=$i;
+        foreach($where as $k => $v) {
+          if(!isset($this->data[$i][$k]) || 
+             $this->data[$i][$k]!=$v)	{
+            continue;
+          }
+        }
+        $keys[]=$i;
       }
     } else {
       $keys=$idx;
@@ -40,11 +94,11 @@ class datatable implements ArrayAccess, Iterator, Countable
     $arr=array();
     if(is_null($field))	{
       foreach($keys as $k) {
-	$arr[]=$this->data[$k];
+        $arr[]=$this->data[$k];
       }
     } else {
       foreach($keys as $k) {
-	$arr[$k]=$this->data[$k][$field];
+        $arr[$k]=$this->data[$k][$field];
       }
     }
     return $arr;
@@ -61,16 +115,16 @@ class datatable implements ArrayAccess, Iterator, Countable
     foreach($idx as $i) {
       $update=TRUE;
       foreach($where as $k => $v) {
-	if(!isset($this->data[$i][$k]) || 
-	   $this->data[$i][$k]!=$v)	{
-	  $update=FALSE;
-	  break;
-	}
+        if(!isset($this->data[$i][$k]) || 
+           $this->data[$i][$k]!=$v)	{
+          $update=FALSE;
+          break;
+        }
       }
       if($update==TRUE)	{
-	foreach($key_value as $k => $v) {
-	  $this->data[$i][$k]=$v;
-	}
+        foreach($key_value as $k => $v) {
+          $this->data[$i][$k]=$v;
+        }
       }
     }
   }
@@ -81,27 +135,27 @@ class datatable implements ArrayAccess, Iterator, Countable
     if($intersect==TRUE)	{
       $data=array();
       $keys=array_intersect(array_keys($this->data[0]),
-			    array_keys($table2->data[0]));
+                            array_keys($table2->data[0]));
       $sets=array($this->data,$table2->data);
 
       foreach($sets as $set) {
-	foreach($set as $x) {
-	$y=array();
-	foreach($keys as $key) {
-	  $y[$key]=$x[$key];
-	}
-	$data[]=$y;
-	}
+        foreach($set as $x) {
+          $y=array();
+          foreach($keys as $key) {
+            $y[$key]=$x[$key];
+          }
+          $data[]=$y;
+        }
       }
       $this->data=$data;
       /*
-      foreach($this->data as $x) {
-	$y=array();
-	foreach($keys as $key) {
-	  $y[$key]=$x[$key];
-	}
-	$data[]=$y;
-      }
+        foreach($this->data as $x) {
+        $y=array();
+        foreach($keys as $key) {
+        $y[$key]=$x[$key];
+        }
+        $data[]=$y;
+        }
       */
       $this->data=$data;
     } else {
@@ -140,7 +194,7 @@ class datatable implements ArrayAccess, Iterator, Countable
 
     foreach($this->data as &$x) {
       if($fun($x))	{
-	$this->$field[]=$x;
+        $this->$field[]=$x;
       }
     }
   }
@@ -163,20 +217,20 @@ class datatable implements ArrayAccess, Iterator, Countable
   } /* print */
 
   /*
-  function group_by_old($key,$by_reference=TRUE,$field='data') 
-  {
+    function group_by_old($key,$by_reference=TRUE,$field='data') 
+    {
     $result = array();
 
     if(!is_array($key))	{
-      $key=array($key);
+    $key=array($key);
     }
 
     $levels=array();
     foreach($key as $k) {
-      $levels[]=array_unique(array_column($this->$field,$k));
+    $levels[]=array_unique(array_column($this->$field,$k));
     }
     
-  }
+    }
   */
 
 
@@ -192,35 +246,35 @@ class datatable implements ArrayAccess, Iterator, Countable
     switch(count($key))	{
     case 1:	$key=$key[0];
       if($by_reference==TRUE)	{
-	foreach ($this->$field as &$x) {
-	  $result[$x[$key]][] = $x;
-	}
+        foreach ($this->$field as &$x) {
+          $result[$x[$key]][] = $x;
+        }
       } else {
-	foreach ($this->$field as $x) {
-	  $result[$x[$key]][] = $x;
-	}
+        foreach ($this->$field as $x) {
+          $result[$x[$key]][] = $x;
+        }
       }
       break;
     case 2:	;
       if($by_reference==TRUE)	{
-	foreach ($this->$field as &$x) {
-	  $result[$x[$key[0]]][$x[$key[1]]][] = $x;
-	}
+        foreach ($this->$field as &$x) {
+          $result[$x[$key[0]]][$x[$key[1]]][] = $x;
+        }
       } else {
-	foreach ($this->$field as $x) {
-	  $result[$x[$key[0]]][$x[$key[1]]][] = $x;
-	}
+        foreach ($this->$field as $x) {
+          $result[$x[$key[0]]][$x[$key[1]]][] = $x;
+        }
       }
       break;
     case 3:	;
       if($by_reference==TRUE)	{
-	foreach ($this->$field as &$x) {
-	  $result[$x[$key[0]]][$x[$key[1]]][$x[$key[2]]][] = $x;
-	}
+        foreach ($this->$field as &$x) {
+          $result[$x[$key[0]]][$x[$key[1]]][$x[$key[2]]][] = $x;
+        }
       } else {
-	foreach ($this->$field as $x) {
-	  $result[$x[$key[0]]][$x[$key[1]]][$x[$key[2]]][] = $x;
-	}
+        foreach ($this->$field as $x) {
+          $result[$x[$key[0]]][$x[$key[1]]][$x[$key[2]]][] = $x;
+        }
       }
       break;
 
@@ -230,16 +284,16 @@ class datatable implements ArrayAccess, Iterator, Countable
       
     }
     /*
-    $result['data']=array();
-    if($by_reference==TRUE)	{
+      $result['data']=array();
+      if($by_reference==TRUE)	{
       foreach ($this->$field as &$x) {
-	$result['data'][]= $x;
+      $result['data'][]= $x;
       }
-    } else {
+      } else {
       foreach ($this->$field as $x) {
-	$result['data'][]= $x;
+      $result['data'][]= $x;
       }
-    }
+      }
     */
     if($by_reference==TRUE)	{
       $ref_result = &$result;
@@ -250,72 +304,72 @@ class datatable implements ArrayAccess, Iterator, Countable
     
   }
   
-/*    Title: 	sort
-      Purpose:	sort datatable by fields in ascending order
-      Created:	Fri Feb 26 08:04:01 2021
-      Author: 	Adrie Dane
-*/
-function sort($keys)
-{
+  /*    Title: 	sort
+        Purpose:	sort datatable by fields in ascending order
+        Created:	Fri Feb 26 08:04:01 2021
+        Author: 	Adrie Dane
+  */
+  function sort($keys)
+  {
     usort($this->data,
-	  function($a, $b) use($keys){
-	    foreach($keys as $key) {
-	      $retval = $a[$key] <=> $b[$key];
-	      if($retval != 0)	{
-		return $retval;
-	      }
-	    }
-	    return $retval;
-	  });
-} /* sort */
+          function($a, $b) use($keys){
+            foreach($keys as $key) {
+              $retval = $a[$key] <=> $b[$key];
+              if($retval != 0)	{
+                return $retval;
+              }
+            }
+            return $retval;
+          });
+  } /* sort */
 
 
-/*    Title: 	rsort
-      Purpose:	sort datatable by fields in descending order
-      Created:	Fri Feb 26 08:04:01 2021
-      Author: 	Adrie Dane
-*/
-function rsort($keys)
-{
+  /*    Title: 	rsort
+        Purpose:	sort datatable by fields in descending order
+        Created:	Fri Feb 26 08:04:01 2021
+        Author: 	Adrie Dane
+  */
+  function rsort($keys)
+  {
     usort($this->data,
-	  function($a, $b) use($keys){
-	    foreach($keys as $key) {
-	      $retval = $b[$key] <=> $a[$key];
-	      if($retval != 0)	{
-		return $retval;
-	      }
-	    }
-	    return $retval;
-	  });
-} /* rsort */
+          function($a, $b) use($keys){
+            foreach($keys as $key) {
+              $retval = $b[$key] <=> $a[$key];
+              if($retval != 0)	{
+                return $retval;
+              }
+            }
+            return $retval;
+          });
+  } /* rsort */
 
-/*    Title: 	msort
-      Purpose:	sort datatable by fields in mixed order depending on '-' sign
-                $keys['field1','-field2','field3']
-		sorts by field1 (ascending), 
-                         field2 (descending) and 
-                         field3 (ascending)
-      Created:	Fri Feb 26 08:04:01 2021
-      Author: 	Adrie Dane
-*/
-function msort($keys)
-{
+  /*    Title: 	msort
+        Purpose:	sort datatable by fields in mixed order depending on '-' sign
+        $keys['field1','-field2','field3']
+        sorts by field1 (ascending), 
+        field2 (descending) and 
+        field3 (ascending)
+        Created:	Fri Feb 26 08:04:01 2021
+        Author: 	Adrie Dane
+  */
+  function msort($keys)
+  {
     usort($this->data,
-	  function($a, $b) use($keys){
-	    foreach($keys as $key) {
-	      if(substr($key,0,1) == '-')	{
-		$k=substr($key,1);
-		$retval = $b[$k] <=> $a[$k];
-	      } else {
-		$retval = $a[$key] <=> $b[$key];
-	      }
-	      if($retval != 0)	{
-		return $retval;
-	      }
-	    }
-	    return $retval;
-	  });
-} /* msort */
+          function($a, $b) use($keys){
+            foreach($keys as $key) {
+              if(substr($key,0,1) == '-')	{
+                $k=substr($key,1);
+                $retval = $b[$k] <=> $a[$k];
+              } else {
+                $retval = $a[$key] <=> $b[$key];
+              }
+              if($retval != 0)	{
+                return $retval;
+              }
+            }
+            return $retval;
+          });
+  } /* msort */
 
 
   function json($pretty=FALSE,$field="data")
@@ -388,41 +442,41 @@ _TABLE;
     return implode("\n",$data);
   }
 
-/*    Title: 	htmltable
-      Purpose:	
-      Created:	Tue Feb 02 17:31:11 2021
-      Author: 	Adrie Dane
-*/
-function htmltable($field="data")
-{
-  $cls="table";
-  $str='';
+  /*    Title: 	htmltable
+        Purpose:	
+        Created:	Tue Feb 02 17:31:11 2021
+        Author: 	Adrie Dane
+  */
+  function htmltable($field="data")
+  {
+    $cls="table";
+    $str='';
   
-  $str.= "<table class='$cls'>\n";
-  $str.= "  <thead>\n";
-  $str.= "    <tr>\n";
-  $str.= "      <th  scope='col'>";
-  $str.= implode("</th>\n      <th  scope='col'>",array_keys(reset($this->$field)));
-  $str.= "</th>\n";
-  $str.= "    </tr>\n";
-  $str.= "  </thead>\n";
-
-  $str.= "  <tbody>\n";
-  foreach($this->$field as $x) {
+    $str.= "<table class='$cls'>\n";
+    $str.= "  <thead>\n";
     $str.= "    <tr>\n";
-    $str.= "      <td>";
-    $str.= implode("</td>\n      <td>",$x);
-    $str.= "</td>\n";
+    $str.= "      <th  scope='col'>";
+    $str.= implode("</th>\n      <th  scope='col'>",array_keys(reset($this->$field)));
+    $str.= "</th>\n";
     $str.= "    </tr>\n";
-  }
-  $str.= "  </tbody>\n";
+    $str.= "  </thead>\n";
+
+    $str.= "  <tbody>\n";
+    foreach($this->$field as $x) {
+      $str.= "    <tr>\n";
+      $str.= "      <td>";
+      $str.= implode("</td>\n      <td>",$x);
+      $str.= "</td>\n";
+      $str.= "    </tr>\n";
+    }
+    $str.= "  </tbody>\n";
 
 
-  $str.= "</table>\n";
+    $str.= "</table>\n";
 
-  return $str;
+    return $str;
   
-} /* htmltable */
+  } /* htmltable */
 
 
   //('','0','Item 0','$0',''),
@@ -433,10 +487,10 @@ function htmltable($field="data")
     foreach($this->$field as $x) {
       $v=array();
       foreach($x as $key => $value) {
-	if(is_numeric($value))
-	  array_push($v,"$value");
-	else
-	  array_push($v,"'$value'");
+        if(is_numeric($value))
+          array_push($v,"$value");
+        else
+          array_push($v,"'$value'");
       }
       array_push($vals,"(".join(', ',$v).")");
     }
@@ -457,11 +511,11 @@ function htmltable($field="data")
     foreach($this->$field as $x) {
       $v=array();
       foreach($columns as $column) {
-	$value=$x[$column];
-	if(is_numeric($value))
-	  array_push($v,"$value");
-	else
-	  array_push($v,"'$value'");
+        $value=$x[$column];
+        if(is_numeric($value))
+          array_push($v,"$value");
+        else
+          array_push($v,"'$value'");
       }
       array_push($vals,"(".join(', ',$v).")");
     }
@@ -470,21 +524,144 @@ function htmltable($field="data")
     return($sql);
   }
 
-/*    Title: 	excel
-      Purpose:	writes data to current sheet
-      Created:	Wed Apr 28 07:25:59 2021
-      Author: 	Adrie Dane
-*/
-function excel($xlsx,$field="data",$top_left='A1',$head=true)
-{
-  if($head==true)	{
-    $data=array_unshift(array_keys(reset($this->$field)),$this->field);
-  }
-  if(isset($this->sheet) && !empty($this->sheet))	{
-    $xlsx->set_sheet($this->sheet);
-  }
-  $xlsx->set_data($top_left,$data);
-} /* excel */
+  /*    Title: 	sql_insert
+        Purpose:	returns sql INSERT statement
+        Created:	Mon May 17 11:35:54 2021
+        Author: 	
+  */
+  function sql_insert($con=null,$table,$columns=array(),$table_columns=[])
+  {
+    if(!empty($keys))	{
+      $A=$this->columns($keys);
+    } else {
+      $A=$this;
+      $keys=$A->column_names();
+    }
+    
+    if(empty($table_columns) && !is_null($con))	{
+      $fieldinfo = $con->fieldinfo($table,$keys);
+      $field_keys = array_intersect(array_column($fieldinfo,'name'),$keys);
+      if(count($keys)!=count($field_keys))	{
+        $A=$A->columns($field_keys);
+        $keys=$field_keys;
+      }
+    }
+  
+    $fields = empty($table_columns) ? implode(", ",$keys) : implode(", ",$table_columns);
+
+    $col_types=$A->gettype();
+    $insert =[];
+    foreach($A->data as $x) {
+      $vals=[];
+      foreach($x as $col => $value) {
+        $vals[] = in_array($col_types[$col],['integer','double','boolean']) ?
+                $value : "'$value'";
+      }
+      $insert[] = "(".implode(",",$vals).")";
+    }
+
+    $str = "INSERT INTO $table ($fields) VALUES ".implode(", ",$insert);
+    pre_r($str,'query');
+
+    if(!is_null($con))	{
+      $con->query($str);
+    }
+  } /* sql_insert */
+
+
+
+
+
+  
+  /*    Title: 	excel
+        Purpose:	writes data to current sheet
+        Created:	Wed Apr 28 07:25:59 2021
+        Author: 	Adrie Dane
+  */
+  function excel($xlsx=null,$field="data",$top_left='A1',$head=true)
+  {
+    if(is_null($xlsx))	{
+      $xlsx=new Excelsheet();
+    }
+    /*
+      if($head==true)	{
+      $data=$this->$field;
+      $keys=array_keys(reset($data));
+      $data=array_unshift($keys,$data);
+      }*/
+    $data=$this->$field;
+    if(isset($this->sheet) && !empty($this->sheet))	{
+      $xlsx->set_sheet($this->sheet);
+    }
+    $xlsx->set_data($top_left,$data);
+    //pre_r($data);
+    //exit;
+    return $xlsx;
+  } /* excel */
+
+  /*    Title: 	gettype
+        Purpose:	Get the type of columns
+        Arguments:$columns if non empty only gets types for specified columns
+                  $prepared if true returns string for prepared statements
+                            if any of the types is "NULL" returns NULL
+        Created:	Mon May 17 08:21:59 2021
+        Author: 	
+  */
+  function gettype($columns=[],$prepared=false)
+  {
+    $columns = empty($columns) ? array_keys(reset($this->data)) : $columns;
+    //    pre_r($columns,'$columns');
+    $types=[];
+    $atom_types=['boolean','integer','string','double'];
+    foreach($columns as $column) {
+      $X=array_column($this->data,$column);
+      foreach($X as $row => $x) {
+        $type = gettype($x);
+        if(in_array($type,$atom_types))	{
+          if($type=='integer')	{
+            for(	;	$row<count($X);	$row++)	{
+              if(gettype($X[$row])=='double')	{
+                $type='double';
+                break;
+              }
+            }
+          }
+          $types[$column]=$type;
+          break;
+        }
+      }
+      if(!in_array($type,$atom_types))	{
+        foreach($X as $x) {
+          $type = gettype($x);
+          if($type!="NULL")	{
+            $types[$column]=$type;
+            break;
+          }
+        }
+        if($type=="NULL")	{
+          $types[$column]=$type;
+        }
+      }
+    }
+    if($prepared==true)	{
+      $str='';
+      foreach($types as $type) {
+        if(in_array($type,['boolean','integer']))	{
+          $str .= 'i';
+        } elseif($type=='double') {
+          $str .= 'd';
+        } elseif($type=='string') {
+          $str .= 's';
+        } elseif($type=='NULL') {
+          return null;
+        }else	{
+          $str .= 'b';
+        }
+      }
+      return $str;
+    }
+    return $types;
+  } /* gettype */
 
 
   // START Iterator interface
@@ -543,5 +720,4 @@ function excel($xlsx,$field="data",$top_left='A1',$head=true)
   
 
 }
-
 ?>

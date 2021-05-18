@@ -60,6 +60,35 @@ function clean_post($data,$submit=0,$verbose=FALSE)
   
 } /* clean_post */
 
+/*    Title: 	safe_post
+      Purpose:	cleaning posted values preserving key information
+      Created:	Sun May 02 09:13:55 2021
+      Author: 	Adrie Dane
+*/
+function safe_post(&$post,$verbose=false)
+{
+
+  if($verbose==true)	{
+    echo "<pre><br>post before clean---<br>";
+    print_r($post);
+  }
+  
+  foreach($post as $key => &$data) {
+    if(is_array($data))	{
+      safe_post($data);
+    } else {
+      $data = clean_value($data);
+    }
+  }
+  unset($data);
+
+  if($verbose==true)	{
+    echo "<pre><br>post after clean---<br>";
+    print_r($post);
+  }
+
+  return $post;
+} /* safe_post */
 
 function is_blocked($mailvars,$spam)
 {

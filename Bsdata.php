@@ -30,6 +30,9 @@ class Bsdata extends datatable
     }
     
     parent::__construct($data);
+
+    $this->validation=[];
+
     //    $this->ncols=count($this->data[0]);
     $this->_data=array();
     if(!empty($data))	{
@@ -65,7 +68,7 @@ function value_to_color($value)
     $col = 'danger';
     break;
   case 'auto':
-    $col = 'primary';
+    $col = 'success';
     break;
   default:
     $col = $value;
@@ -93,6 +96,7 @@ function set_control_style($rkey,$ckey,$key,$value=true)
   $col = strpos($key,'text')===0 ?
     $key :
     'text-'.$this->value_to_color($key);
+  
   if(strpos($this->_data[$rkey][$ckey],"type='text'")!==false ||
      strpos($this->_data[$rkey][$ckey],"<select")!==false)	{
     // setting style classes on individual options doesn't work possible to use first-child etc
@@ -102,7 +106,7 @@ function set_control_style($rkey,$ckey,$key,$value=true)
 		  " $cls name=",
 		  $this->_data[$rkey][$ckey]);
     if($value==true)	{
-      $this->_data[$rkey][$ckey]="<b>".$this->_data[$rkey][$ckey]."</b>";
+        $this->_data[$rkey][$ckey]="<b>".$this->_data[$rkey][$ckey]."</b>";//.pre_r($col,'$col',true).pre_r($key,'$key',true);
     }
   }
 
@@ -198,6 +202,15 @@ function array_set_input($arr)
   ;
 } /* array_set_input */
 
+/*    Title: 	set_validation
+      Purpose:	
+      Created:	Fri Apr 30 16:18:45 2021
+      Author: 	Adrie Dane
+*/
+function set_validation()
+{
+  ;
+} /* set_validation */
 
 
   /*    Title: 	set_inputs

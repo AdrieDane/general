@@ -17,6 +17,10 @@ class Excelsheet
 
     if(is_null($file))	{
       // $this->filename="No file loaded just an interface to public functions";
+      $this->filename='';
+      /** Create a new Spreadsheet Object **/
+      $this->wb = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+      $this->set_sheet(0);
       return;
     }
 
@@ -193,12 +197,12 @@ function set_data($top_left,$data)
        $top_left[0]++;
        $top_left=$col.$top_left[0];
      }
-     $this->sheet->fromArray($data,NULL,$top_left);
+     $this->sheet->fromArray($data,NULL,strtoupper($top_left));
    } else {
      if(is_array($top_left))	{
        $this->sheet->setCellValueByColumnAndRow($top_left[1]+1,$top_left[0]+1, $data);
      } else {
-       $this->sheet->setCellValue($top_left,$data);
+         $this->sheet->setCellValue(strtoupper($top_left),$data);
      }
    }
  } /* set_data */
