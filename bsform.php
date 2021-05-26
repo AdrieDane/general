@@ -2,7 +2,7 @@
 
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
-class Bsform extends Oldbstable
+class Bsform extends Bstable
 {
   use Optionsarray;
   public function __construct($file='',$options=[]) 

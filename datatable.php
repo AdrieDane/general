@@ -11,7 +11,7 @@ class datatable implements ArrayAccess, Iterator, Countable
 
   public function __construct($data) 
   {
-    $this->data=$data;
+    $this->data = is_array($data) ? $data :[$data];
     //    $this->ncols=count($this->data[0]);
   }
 
@@ -59,6 +59,9 @@ class datatable implements ArrayAccess, Iterator, Countable
   */
   function columns($columns,$array=false)
   {
+    if(!is_array($columns))	{
+      $columns=[$columns];
+    }
     $data=[];
     foreach($this->data as $row => $x) {
       foreach($columns as $column) {
@@ -104,6 +107,65 @@ class datatable implements ArrayAccess, Iterator, Countable
     return $arr;
   } /* select */
 
+  // PHP program to search for multiple
+  // key=>value pairs in array
+  //   key are in $keys
+  //   value are the corresponding $A[key] values to look for
+  // is devides this->data into two portions
+  // 'absent': the rows not present in $A (based on $keys)
+  // 'present': the rows present in $A (based on $keys)
+  //   if $id is empty the key of each row is the corresponding key in $A
+  //             else the key of each row is $A[$id] of the corresponding row $A
+
+  function search($A,$keys=[])
+  {
+    if(is_array($A))	{
+      $A = new datatable($A);
+    }
+    // match all overlapping keys
+    if(empty($keys))	{
+      $keys=$this->column_names();
+      //      pre_r($keys,'empty $keys');
+    } elseif(!is_array($keys)) {
+      $keys=[$keys];
+      //      pre_r($keys,'!is_array $keys');
+    }
+    //    pre_r($keys,'$keys');
+
+    $Akeys=$A->column_names();
+    $keys=array_intersect($keys,$Akeys);
+    if(empty($keys))	{
+      pre_r($Akeys,'$Akeys');
+      exit("datatable->search no overlapping keys");
+    }
+
+    // create two intermediate arrays with the same keys
+    // $now they can be compared
+    $this_columns=$this->columns($keys,true);
+    $A_columns=$A->columns($keys,true);
+
+    //pre_r($this_columns,'$this_columns');
+    //pre_r($A_columns,'$A_columns');
+    // Create the result array
+    $result = array();
+    foreach($this_columns as $row => $x) {
+      $matched=array_filter($A_columns,
+                          function($a) use($x)
+                          {
+                            return $a==$x;
+                          });
+      // pre_r($matched,'$matched');
+      if(empty($matched))	{
+        $result['absent'][] = $this->data[$row];
+      }elseif(count($matched)>1)	{
+        ;
+      }else	{
+        $result['present'][key($matched)] = $this->data[$row];
+      }
+    }
+    return $result;
+  }
+  
   public function update($idx=array(),$key_value=array(),$where=array()) 
   {
     if(empty($key_value))	{

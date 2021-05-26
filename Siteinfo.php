@@ -20,7 +20,7 @@ class Siteinfo
 function __construct($start_dash=false)
 {
   $this->protocol=isset($_SERVER['HTTPS']) ? "https://" : "http://";
-  $this->host=$_SERVER['HTTP_HOST'];
+  $this->realhost=$this->host=$_SERVER['HTTP_HOST'];
   $this->port=$_SERVER['SERVER_PORT'];
   $this->request = $start_dash==true ? $_SERVER['REQUEST_URI'] : substr($_SERVER['REQUEST_URI'],1);
   if($this->host=='localhost')	{
@@ -42,16 +42,20 @@ function __construct($start_dash=false)
   $this->site = $this->domain.'/';
   $this->url=$this->site.$this->request;
   $this->strip=strtok(strtok($this->url, '?'), '#');
-
+  $this->file = basename($_SERVER['SCRIPT_FILENAME']);
+  
   // PATH AND FILE NAME
   $this->filepath = strtok($this->request, '?');
   $this->filepath = strtok($this->filepath, '#');
   // FILE NAME ONLY
-  $this->file = basename($this->request, '?'.$this->query_string);
-  $this->file = strtok($this->file, '#');
+  //  $this->file = basename($this->request, '?'.$this->query_string);
+  //  $this->file = strtok($this->file, '#');
   $this->filepath = strtok($this->request, '?');
   $this->filepath = strtok($this->filepath, '#');
-  $this->path = pathinfo($this->request, PATHINFO_DIRNAME);
+  if(basename($this->filepath)!=$this->file)	{
+    $this->filepath .= $this->file;
+  }
+  $this->path = pathinfo($this->filepath, PATHINFO_DIRNAME);
   $this->depth = count(explode('/',$this->path));
   if($start_dash==false)	{
     $this->path .= '/';
