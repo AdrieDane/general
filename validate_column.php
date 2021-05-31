@@ -404,6 +404,27 @@ function validate_forbidden($column,$forbiddenchars='/\W+/',$correctchar='_',$fo
   }
 } /* validate_forbidden */
 
+/*    Title: 	validate_member
+      Purpose:	checks whether value is present in array
+      Created:	Mon May 31 13:05:41 2021
+      Author: 	
+*/
+  function validate_member($column,$allowed)
+{
+  $kv=array_filter(array_column($this->data,$column),
+                   function($a) use($allowed) { return !in_array($a,$allowed);
+			    }
+			    );
+  $arr=[];
+  foreach($kv as $k => $v) {
+    $arr[$v][]=$k;
+  }
+  $col_validation = new Columnvalidation($this,$column,'member',$arr,['warning' => $warning]);
+  return $col_validation;
+} /* validate_member */
+
+
+  
 /*    Title: 	validate_case
       Purpose:	matches column against array
       Created:	Mon Apr 26 17:31:22 2021

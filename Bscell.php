@@ -91,8 +91,9 @@ function html($key,$row='',$options=[])
   if(!isset($this->type) || $data_only==true)	{
     $str .= $this->value;
   } elseif($this->type=='select')	{
-    //    $str .= $this->value;
-    $str = "<select name='".$key."[".$row.
+    // fix sort by comment $value
+    $str = "<!---".$this->value."--->";
+    $str .= "<select name='".$key."[".$row.
       "]'$ctrl_class>";
     foreach($this->choices as $value) {
       $str .= "<option value='$value'";
