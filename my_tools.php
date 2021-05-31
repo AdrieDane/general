@@ -1,8 +1,11 @@
 <?php
+
+require_once 'STR_functions.php';
 require_once 'vendor/autoload.php';
 include_once 'Siteinfo.php';
 include_once 'validate_column.php';
 include_once 'Optionsarray.php';
+require_once 'HTML_snippets.php';
 include_once 'Dateconvert.php';
 include_once 'Excelsheet.php';
 include_once 'quickdb.php';

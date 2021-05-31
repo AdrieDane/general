@@ -185,6 +185,7 @@ trait isetget
         $this->data[$i][$field]=$value;
       }
     }
+    return count($idx);
   } /* iset */
 
   /*    Title: 	iupdate
