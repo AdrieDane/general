@@ -1,6 +1,7 @@
 {
     "require": {
         "phpoffice/phpspreadsheet": "^1.17",
-        "shuchkin/simplexlsx": "^0.8.21"
+        "shuchkin/simplexlsx": "^0.8.21",
+        "guzzlehttp/guzzle": "^7.0"
     }
 }

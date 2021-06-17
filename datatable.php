@@ -20,10 +20,18 @@ class datatable implements ArrayAccess, Iterator, Countable
         Created:	Tue May 18 10:21:43 2021
         Author: 	
   */
-  function is_associative()
+  function is_associative($level=1)
   {
-    if (array() === $this->data) return false;
-    return array_keys($this->data) !== range(0, count($this->data) - 1);
+    if (array() === $this->data) return false; // empty
+    if($level==1)	{
+      return array_keys($this->data) !== range(0, count($this->data) - 1);
+    } elseif($level==2) {
+      $x=reset($this->data);
+      //    pre_r($x,'$x');
+      return array_keys($x) !== range(0, count($x) - 1);
+    } else {
+      exit('ERROR datatable::is_associative $level must be 1 or 2');
+    }
   } /* is_associative */
 
   

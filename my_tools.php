@@ -1,5 +1,6 @@
 <?php
 
+require_once 'utils.php';
 require_once 'STR_functions.php';
 require_once 'vendor/autoload.php';
 include_once 'Siteinfo.php';

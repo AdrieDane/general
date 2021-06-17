@@ -37,6 +37,7 @@ class Qdb extends mysqli
   function queryoptions($options)
   {
     return useroptions(['single_row' => true,
+                        'force_array' => false,
                         'array_type' => MYSQLI_ASSOC,
                         'key_value' => false],$options);
   } /* options */
@@ -82,6 +83,15 @@ class Qdb extends mysqli
   */
   function prepared($query='',$types,$data=[],$options=[])
   {
+    if(!is_array($data))	{
+      $data=[$data];
+    }
+    if(self::$verbose==true)	{
+      echo nl2br("<b>Running Prepared Statement:</b>\n$query\n",false);
+      echo pre_r($types,"<b>Types</b>",true);
+      echo pre_r($data,"<b>Data</b>",true);
+    }
+
     $stmt = $this->prepare($query);
     // prepare() can fail because of syntax errors, missing privileges, ....
     if ( false===$stmt ) {
@@ -89,7 +99,7 @@ class Qdb extends mysqli
       // it doesn't make sense to go on
       // you might want to use a more sophisticated mechanism than die()
       // but's it's only an example
-      die('prepare() failed: ' . htmlspecialchars($mysqli->error));
+      die('prepare() failed: ' . htmlspecialchars($stmt->error));
     }
     $rc = $stmt->bind_param($types, ...$data);
     // bind_param() can fail because the number of parameter doesn't match the placeholders
@@ -107,14 +117,7 @@ class Qdb extends mysqli
     if ( false===$rc ) {
       die('execute() failed: ' . htmlspecialchars($stmt->error));
     }
-
-    if(self::$verbose==true)	{
-      echo nl2br("<b>Running Prepared Statement:</b>\n$query\n<b>Data</b>:\n",false);
-      echo pre_r($data,"<b>data</b>",true);
-    }
-
     $result=$stmt->get_result();
-    
     if (!$result) {
       if(in_array(substr($query,0,6),["INSERT"]))	{
         $id = $this->insert_id;
@@ -129,7 +132,8 @@ class Qdb extends mysqli
       }
       return $affected_rows;
     }
-    return $this->format_result($stmt->get_result(),$this->queryoptions($options));
+    //    pre_r($result,'$result');
+    return $this->format_result($result,$this->queryoptions($options));
   } /* prepared */
 
   
@@ -298,6 +302,7 @@ function type_str($table,$keys=[])
   
   /*    Title: 	update_or_insert
         Purpose:	
+        $A either a datatable or 1D or 2D array
         Created:	Fri May 21 09:25:25 2021
         Author: 	
   */
@@ -311,7 +316,7 @@ function type_str($table,$keys=[])
     //pre_r($A,'$A');
 
     // get all table data
-    $X=$this->query("SELECT * FROM $table");
+    $X=$this->query("SELECT * FROM $table",['single_row' => false]);
 
     // check wheather new data was already present and just needs an update
     // otherwise it should be inserted
@@ -346,13 +351,15 @@ function type_str($table,$keys=[])
 
   /*    Title: 	map_keys
         Purpose:	helper function to prepare insert/update data
+        Steps: 1 convert $A into a 2 dimensional datatable
+               2 test whether columns in A are numeric
         Returns a datatable object with keys that are present in $table
         Created:	Sat May 22 11:44:48 2021
         Author: 	
   */
   function map_keys($table,$A,$keys)
   {
-    // Make sure $A is a valid datatable
+    // step 1 Make sure $A is a valid 2D datatable
     if(is_array($A))	{
       //$a is the first element of $A
       $a=reset($A);
@@ -361,10 +368,15 @@ function type_str($table,$keys=[])
         $A=[$A];
       }
       $A = new datatable($A);
+    } else {
+      $a=reset($A->data);
+      if(!is_array($a))	{
+        $A->data=[$A->data];
+      }
     }
-
-    // data with numerical fields can only be used when number of fields match
-    if(!$A->is_associative())	{
+    
+    // step 2 data with numerical fields can only be used when number of fields match
+    if(!$A->is_associative(2))	{
       //      pre_r($A,'$A');
       $nkeys=count(reset($A->data));
       $fieldinfo = $this->fieldinfo($table);
@@ -392,19 +404,30 @@ function type_str($table,$keys=[])
       return $A;
     }
 
-
+    /*
+    pre_r($A,'$A');
+    pre_r($field_keys,'$field_keys');
     // At this point we have an associative datatable
     if(!empty($keys))	{
+      pre_r($keys,'$keys');
       $A=$A->columns($keys);
       $tmp_keys = new datatable($keys);
+      pre_r($tmp_keys,'$tmp_keys');
       // rename data keys so they match $table keys
       if($tmp_keys->is_associative())	{
+      echo ".hehe2";
         $field_keys=array_keys($keys);
+      echo ".hehe3";
         foreach($A->data as &$x) {
           $x = array_combine($field_keys, array_values($x));
         }
       }
     }
+    */
+    if(!empty($keys))	{ // only preserve keys to update
+      $A=$A->columns($keys);
+    }
+    //    pre_r($A,'$A');
     return $A;
   } /* map_keys */
 
