@@ -105,6 +105,11 @@ function to_download($filename='hello.xlsx')
 } /* to_download */
 
 
+  public static function timestamp($value) {
+    return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($value);
+  }
+
+  
 /*    Title: 	date_convert
       Purpose:	Converts Excel date to PHP date and visa versa
       Created:	Fri Apr 02 09:09:17 2021

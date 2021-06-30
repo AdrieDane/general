@@ -69,11 +69,12 @@ class Siteinfo
       $this->filepath .= $this->file;
     }
     $this->path = pathinfo($this->filepath, PATHINFO_DIRNAME);
-    $this->depth = count(explode('/',$this->path));
+    //echo "Path: ".$this->path;
     if($start_dash==false)	{
       $this->path .= '/';
     }
-    $this->to_site = implode('/',array_fill(0,$this->depth,'..')).'/';
+    $this->depth = in_array($this->path,['.','./']) ? 0 : count(explode('/',$this->path));
+    $this->to_site = $this->depth ==0 ? '' : implode('/',array_fill(0,$this->depth,'..')).'/';
     $this->hash = parse_url($this->request, PHP_URL_FRAGMENT);
   }
 

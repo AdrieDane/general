@@ -41,6 +41,19 @@ class Blob
     foreach($fields as $field) {
       $this->$field = $result[$field];
     }
+  } elseif(is_string($input)) { //input must be a stream (or file? not sure if that works)
+    if(isset($opts['headers']) && !empty($opts['headers']))	{
+      $headers=$opts['headers'];
+      preg_match('/.*filename=\"(.*)\"/', $headers['Content-Disposition'], $output_array);
+      $this->Id       = 0;
+      $this->name     = $output_array[1];
+      $this->type     = $headers['Content-Type'];
+      $this->size     = $headers['Content-Length'];
+      $this->object = !empty($opts) && in_array('object',array_keys($opts)) ?
+                    $opts['object'] :
+                    '';
+      $this->contents = file_get_contents($input);
+    }
   }
   //  $this->temp_file();
   

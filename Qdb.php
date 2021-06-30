@@ -39,7 +39,8 @@ class Qdb extends mysqli
     return useroptions(['single_row' => true,
                         'force_array' => false,
                         'array_type' => MYSQLI_ASSOC,
-                        'key_value' => false],$options);
+                        'key_value' => false,
+                        'dimensions' =>null],$options);
   } /* options */
 
   /*    Title: 	update_column
@@ -140,6 +141,9 @@ class Qdb extends mysqli
   /*    Title: 	format_result
         Purpose:	creating return result
         Created:	Wed May 19 09:06:12 2021
+        // a 1 dimensional array is returned when #rows =1
+        // if $force_array=true forces 2 dimensional array
+        // if $force_array=-1 forces single value
         Author: 	
   */
   function format_result($result,$options)
@@ -169,6 +173,13 @@ class Qdb extends mysqli
     if($result->num_rows==1 && $single_row==true)	{
       $A=reset($A);
     }
+
+    if(is_array(reset($A)) && $dimensions==1)	{
+      $A=array_merge(...$A);
+    }
+    
+
+    
     if(self::$verbose==true)	{
       pre_r($A,"<b>Query Result</b>");
       echo '<br>';
@@ -182,9 +193,6 @@ class Qdb extends mysqli
   } /* format_result */
 
   
-  // a 1 dimensional array is returned when #rows =1
-  // if $force_array=true forces 2 dimensional array
-  // if $force_array=-1 forces single value
   function query($query='',$options=[])
   {
     if(self::$verbose==true)	{
@@ -236,7 +244,7 @@ function type_str($table,$keys=[])
       $prepared .= 'b';
     } elseif(in_array($types[$key],['double','float']))	{
       $prepared .= 'd';
-    } elseif(in_array($types[$key],['varchar','char']))	{
+    } elseif(in_array($types[$key],['varchar','char','longtext']))	{
       $prepared .= 's';
     } else {
       exit("Qdb type_str unknown type: ".$types[$key]);
@@ -308,31 +316,39 @@ function type_str($table,$keys=[])
   */
   function update_or_insert($table,$A,$keys=[],$where=[],$options=[])
   {
-
+    // make sure keys are present in the SQL table
     $A = $this->map_keys($table,$A,$keys);
-
-    $prim=$this->primary_key($table);
+    //   pre_r($A,'$A');
 
     //pre_r($A,'$A');
 
     // get all table data
     $X=$this->query("SELECT * FROM $table",['single_row' => false]);
-
-    // check wheather new data was already present and just needs an update
-    // otherwise it should be inserted
-    $split=$A->search($X,$where,$prim);
-    //pre_r($split,'$split');
-    if(!empty($split))	{
-      $keys=array_intersect(array_keys(reset($X)),
-                            $keys);
+    if(empty($X))	{
+      //pre_r($X,'$X');
+      $absent=$A->data;
+    } else {
+      $prim=$this->primary_key($table);
+      // check wheather new data was already present and just needs an update
+      // otherwise it should be inserted
+      $split=$A->search($X,$where,$prim);
+      pre_r($split,'$split');
+      if(!empty($split))	{
+        $keys=array_intersect(array_keys(reset($X)),
+                              $keys);
+      }
+      extract($split);
     }
-    extract($split);
+
     if(isset($absent) && !empty($absent))	{
+      if(empty($keys))	{
+        $keys=array_keys(reset($absent));
+      }
+      pre_r($keys,'$keys');
       $Ainsert=new datatable($absent);
       $absent=$Ainsert->columns($keys);
       //pre_r($Ainsert,'$absent');
       $this->insert($table,$Ainsert);
-      
     }
 
     if(isset($present) && !empty($present))	{

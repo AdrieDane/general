@@ -1,10 +1,10 @@
 <?php
-  //require_once 'vendor/autoload.php';
+//require_once 'vendor/autoload.php';
 
 /**
-* $file: character separated text file
-* returns delimiter
-*/
+ * $file: character separated text file
+ * returns delimiter
+ */
 function detectDelimiter($file)
 {
   $delimiters = array(";" => 0, "," => 0, "\t" => 0, "\|" => 0);
@@ -21,7 +21,7 @@ function detectDelimiter($file)
 }
 
 /*
- options skiprows: integer
+  options skiprows: integer
 */
 
 
@@ -49,17 +49,18 @@ class importtable extends datatable
     }
 
     $opts=['importtableId' => 0,
-	   'table_class' => 'default',
-	   'file_type' => 'csv',
-	   'delim' => '',
-	   'skip_empty_header' => true,
-	   'infile_order' => false,
-	   'sheet' => '',
-	   'skiprows' => 0,
-	   'skipemptyrows' => true,
-	   'rename' => [],
-	   'numeric' => [],
-	   'required' => []];
+           'table_class' => 'default',
+           'file_type' => 'csv',
+           'delim' => '',
+           'skip_empty_header' => true,
+           'infile_order' => false,
+           'sheet' => '',
+           'skiprows' => 0,
+           'skipemptyrows' => true,
+           'rename' => [],
+           'numeric' => [],
+           'required' => [],
+           'datecol' =>[]];
 
     $opts=$this->useroptions($opts,$user_options);
 
@@ -74,12 +75,12 @@ class importtable extends datatable
     //    pre_r($opts,'$opts**');
 
     /*    echo "statics<br>";
-    echo "numeric";
+          echo "numeric";
     
-    print_r(static :: $numcol);
-    echo "rename";
-    print_r(static :: $rename);
-    echo "statics<br>";
+          print_r(static :: $numcol);
+          echo "rename";
+          print_r(static :: $rename);
+          echo "statics<br>";
     */
 
 
@@ -97,12 +98,12 @@ class importtable extends datatable
       $importtable = $excelsheet->data();
       // pre_r($importtable,'importtable');
       if(empty($opts['sheet']))	{
-	$opts['sheet']=$excelsheet->name();
+        $opts['sheet']=$excelsheet->name();
       }
     } else {
       $delim=$opts['delim'];
       if(empty($delim) | is_null($delim))	{
-	$delim=detectDelimiter($file);
+        $delim=detectDelimiter($file);
       }
       $importtable = array_map(function($a) use ($delim) {return str_getcsv($a,$delim);}, file($file));
       $opts['delim']=$delim;
@@ -124,9 +125,9 @@ class importtable extends datatable
     foreach($importtable as &$row) {
       $hdr=array_filter($row);
       if(count($hdr)<0.5*count($row))	{
-	$start +=1;
+        $start +=1;
       } else {
-	break;
+        break;
       }
     }
     for(	$i=0;	$i<$start;	$i++)	{
@@ -142,9 +143,9 @@ class importtable extends datatable
     if($skip_empty_header)	{
       $empty=array_keys(array_filter($importtable[0], function ($a) { return empty($a);}));
       foreach($importtable as &$row) {
-	foreach($empty as $idx) {
-	  unset($row[$idx]);
-	}
+        foreach($empty as $idx) {
+          unset($row[$idx]);
+        }
       }
     }
 
@@ -154,12 +155,12 @@ class importtable extends datatable
     // check whether all required columns are present
     if(isset(static :: $reqcol))	{
       foreach(static :: $reqcol as $col) {
-	if(!in_array($col,$this->head))	{
-	  if(!isset($this->absent))	{
-	    $this->absent=array();
-	  }
-	  $this->absent[]=$col;
-	}
+        if(!in_array($col,$this->head))	{
+          if(!isset($this->absent))	{
+            $this->absent=array();
+          }
+          $this->absent[]=$col;
+        }
       }
     }
     if(isset($this->absent))	{
@@ -167,9 +168,9 @@ class importtable extends datatable
       $nabsent=count($this->absent);
       $err_msg='<b>Error reading: '.$this->file_info['basename']."</b>";
       $err_msg .= $nabsent==1 ? 
-	"<br>Column: '".$this->absent[0]."' is" :
-	"<br>Columns: '".implode("', '",$this->absent) .
-	"' are";
+               "<br>Column: '".$this->absent[0]."' is" :
+               "<br>Columns: '".implode("', '",$this->absent) .
+               "' are";
       $err_msg .= " not present.<br><br>Please correct<br>Make sure spelling and case are correct";
       exit($err_msg);
     }
@@ -178,9 +179,9 @@ class importtable extends datatable
     // rename headers
     if(isset(static :: $rename))	{
       foreach($importtable[0] as &$head) {
-	if(array_key_exists($head,static :: $rename))	{
-	  $head=static :: $rename[$head];
-	}
+        if(array_key_exists($head,static :: $rename))	{
+          $head=static :: $rename[$head];
+        }
       }
     }
 
@@ -193,34 +194,41 @@ class importtable extends datatable
     
     if(isset($numeric))	{
       foreach($importtable[0] as &$head) {
-	foreach($numeric as $field) {
-	  if(!(strpos($head,$field)===FALSE))	{
-	    array_push($numcol,$head);
-	  }
-	}
+        foreach($numeric as $field) {
+          if(!(strpos($head,$field)===FALSE))	{
+            array_push($numcol,$head);
+          }
+        }
       }
     }
 
 
     // this turns the importtable with numerical indices into an associative array
     array_walk($importtable, function(&$a) use ($importtable) {
-		 $a = array_combine($importtable[0], $a);
-	       });
+      $a = array_combine($importtable[0], $a);
+    });
     array_shift($importtable); # remove column header;
 
     // walking through the complete 2 dimensional array
     $i=1;
     foreach($importtable as &$x) {
       if($opts['infile_order']==TRUE)	{
-	$x['infile_order']=$i++;
+        $x['infile_order']=$i++;
       }
       foreach($numcol as $field) {
-	if(isset($x[$field]))	{
-	  $x[$field]=(float) $x[$field];
-	}
+        if(isset($x[$field]))	{
+          $x[$field]=(float) $x[$field];
+        }
+      }
+      // date columns
+      foreach($datecol as $field) {
+        if(isset($x[$field]) && is_numeric($x[$field]) && $x[$field]>0)	{
+          $x[$field]=date('Y-m-d',Excelsheet::timestamp($x[$field]));
+        }
       }
     }
-
+    unset($x);
+    
     $this->opts=$opts;
     //    $this->nrows=count($importtable);
     $this->ncols=empty($importtable) ? 0 : count($importtable[0]);

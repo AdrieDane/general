@@ -15,6 +15,66 @@ class datatable implements ArrayAccess, Iterator, Countable
     //    $this->ncols=count($this->data[0]);
   }
 
+
+  
+/*    Title: 	jsonify_fields
+      Purpose:	
+      Created:	Sun Jun 27 09:10:52 2021
+      Author: 	
+*/
+function jsonify_fields($options=[])
+{
+  $opts=useroptions(['fields' => [],
+                     'keep' => []],$options);
+  extract($opts);
+
+  if(empty($fields) && empty($keep))	{
+    exit('ERROR: jsonify_fields both fields and keep options are empty');
+  }
+
+  if(!empty($fields) && !empty($keep))	{
+    exit('ERROR: jsonify_fields both fields and keep options are set and not empty<br>'.
+         'Make sure only one of these two is set and keep the other empty');
+  }
+
+  //  pre_r($keep,'$keep');
+  $data=[];
+  foreach($this->data as $Id => $x) {
+    $json=[];
+    $y=[];
+    foreach($x as $key => $value) {
+      if((!empty($fields) && !in_array($key,$fields)) || in_array($key,$keep))	{
+        $y[$key]=$value;
+      } else {
+        $json[$key]=$value;
+      }
+    }
+    $y['json_fields']=json_encode($json);
+    $data[]=$y;
+  }
+  $this->data=array_combine(array_keys($this->data),$data);
+  //  pre_r($opts,'jsonify_fields $opts');
+} /* jsonify_fields */
+
+  /*    Title: 	unjsonify_fields
+      Purpose:	
+      Created:	Sun Jun 27 09:48:43 2021
+      Author: 	
+*/
+function unjsonify_fields()
+{
+  foreach($this->data as &$x) {
+    $unjson=json_decode($x['json_fields']);
+    foreach($unjson as $key => $value) {
+      $x[$key]=$value;
+    }
+    unset($x['json_fields']);
+  }
+  unset($x);
+} /* unjsonify_fields */
+
+
+  
   /*    Title: 	is_associative
         Purpose:	returns true if $this->data is an associative array
         Created:	Tue May 18 10:21:43 2021
@@ -127,6 +187,10 @@ class datatable implements ArrayAccess, Iterator, Countable
 
   function search($A,$keys=[])
   {
+    if(empty($A))	{
+      //      pre_r($A,'$A',true);
+      exit("datatable->search empty datatable<br>". pre_r($A,'$A',true));
+    }
     if(is_array($A))	{
       $A = new datatable($A);
     }
@@ -152,8 +216,9 @@ class datatable implements ArrayAccess, Iterator, Countable
     $this_columns=$this->columns($keys,true);
     $A_columns=$A->columns($keys,true);
 
-    //pre_r($this_columns,'$this_columns');
-    //pre_r($A_columns,'$A_columns');
+    // pre_r($this_columns,'$this_columns');
+    // pre_r($A_columns,'$A_columns');
+    //exit('*****');
     // Create the result array
     $result = array();
     foreach($this_columns as $row => $x) {
@@ -234,6 +299,21 @@ class datatable implements ArrayAccess, Iterator, Countable
     //    $this->nrows=count($this->data);
   }
   
+  /*    Title: 	transpose
+        Purpose:	returns transposed data as an array
+        Created:	Tue Jun 22 17:52:43 2021
+        Author: 	
+  */
+  function transpose()
+  {
+    $data=[];
+    foreach($this->data as $row => $x) {
+      foreach($x as $column => $value) {
+        $data[$column][$row]=$value;
+      }
+    }
+    return $data;
+  } /* transpose */
 
 
   // $in_place = TRUE overwrites input
