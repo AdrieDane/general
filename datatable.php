@@ -11,10 +11,54 @@ class datatable implements ArrayAccess, Iterator, Countable
 
   public function __construct($data) 
   {
-    $this->data = is_array($data) ? $data :[$data];
+    if($data instanceof datatable)	{
+      // simply copy the members
+      foreach($data as $key => $value) {
+        $this->$key=$value;
+      }
+      return;
+    }
+    
+    if(!is_array($data))	{
+      $data=[$data];
+    }
+    if(is_array(reset($data)))	{
+      $this->data=$data;
+    }  else { // force to two dimensions
+      $this->data=[];
+      $this->data[]=$data;
+    }
+      //    $this->data = is_array($data) ? $data :[$data];
     //    $this->ncols=count($this->data[0]);
   }
 
+/*    Title: 	rename_keys
+      Purpose:	
+      Created:	Mon Jul 19 17:38:58 2021
+      Author: 	
+*/
+function rename_keys($rename=[])
+{
+  foreach($this->data as &$x) {
+    foreach($rename as $old => $new) {
+      if(isset($x[$old]))	{
+        $x[$new]=$x[$old];
+        unset($x[$old]);
+      }
+    }
+    unset($x);
+  }
+} /* rename_keys */
+
+  /*    Title: 	count_columns
+        Purpose:	
+        Created:	Mon Jul 19 17:53:14 2021
+        Author: 	
+  */
+  function count_columns()
+  {
+    return count(reset($this->data));
+  } /* count_columns */
 
   
 /*    Title: 	jsonify_fields
@@ -24,7 +68,8 @@ class datatable implements ArrayAccess, Iterator, Countable
 */
 function jsonify_fields($options=[])
 {
-  $opts=useroptions(['fields' => [],
+  $opts=useroptions(['json_fields' => 'json_fields',
+                     'fields' => [],
                      'keep' => []],$options);
   extract($opts);
 
@@ -49,7 +94,7 @@ function jsonify_fields($options=[])
         $json[$key]=$value;
       }
     }
-    $y['json_fields']=json_encode($json);
+    $y[$json_fields]=json_encode($json);
     $data[]=$y;
   }
   $this->data=array_combine(array_keys($this->data),$data);
@@ -61,16 +106,33 @@ function jsonify_fields($options=[])
       Created:	Sun Jun 27 09:48:43 2021
       Author: 	
 */
-function unjsonify_fields()
+function unjsonify_fields($options=[])
 {
+  $opts=useroptions(['json_fields' => 'json_fields',
+                     'fields' => [],
+                     'return_data' => false,
+                     'keep' => []],$options);
+  extract($opts);
+
+  if($return_data==true)	{
+    $data=[];
+  }
+  
   foreach($this->data as &$x) {
-    $unjson=json_decode($x['json_fields']);
+    $unjson=json_decode($x[$json_fields]);
     foreach($unjson as $key => $value) {
       $x[$key]=$value;
     }
-    unset($x['json_fields']);
+    unset($x[$json_fields]);
+    if($return_data)	{
+      $data[]=$unjson;
+    }
   }
   unset($x);
+
+  if($return_data)	{
+    return $data;
+  }
 } /* unjsonify_fields */
 
 
@@ -80,17 +142,17 @@ function unjsonify_fields()
         Created:	Tue May 18 10:21:43 2021
         Author: 	
   */
-  function is_associative($level=1)
+  function is_associative($dimension=1)
   {
     if (array() === $this->data) return false; // empty
-    if($level==1)	{
+    if($dimension==1)	{
       return array_keys($this->data) !== range(0, count($this->data) - 1);
-    } elseif($level==2) {
+    } elseif($dimension==2) {
       $x=reset($this->data);
       //    pre_r($x,'$x');
       return array_keys($x) !== range(0, count($x) - 1);
     } else {
-      exit('ERROR datatable::is_associative $level must be 1 or 2');
+      exit('ERROR datatable::is_associative $dimension must be 1 or 2');
     }
   } /* is_associative */
 
@@ -187,6 +249,9 @@ function unjsonify_fields()
 
   function search($A,$keys=[])
   {
+    echo "--->search";
+    pre_r($keys);
+    pre_r($A,'$A');
     if(empty($A))	{
       //      pre_r($A,'$A',true);
       exit("datatable->search empty datatable<br>". pre_r($A,'$A',true));

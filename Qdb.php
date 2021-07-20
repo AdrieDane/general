@@ -1,13 +1,13 @@
 <?php
 /*
-numerics
--------------16,1,1,2,9,3,8,8,4,5,246,246,246,
+  numerics
+  -------------16,1,1,2,9,3,8,8,4,5,246,246,246,
 
-dates
-------------10,12,7,11,13,
+  dates
+  ------------10,12,7,11,13,
 
-strings & binary
-------------254,253,254,254,254,253,252,252,252,252,252,252,252,
+  strings & binary
+  ------------254,253,254,254,254,253,252,252,252,252,252,252,252,
 */
 /*    Title: 	quickdb
       Purpose:	interface to quick database
@@ -28,53 +28,53 @@ class Qdb extends mysqli
     if ($this->connect_error) 
       die("Connection failed: " . $this->connect_error);
   }
-  
-  /*    Title: 	options
-        Purpose:	sets and returns options
-        Created:	Wed May 19 08:59:59 2021
+
+  /*    Title: 	truncate
+        Purpose:	truncate $table
+        Created:	Tue Jul 20 12:08:41 2021
         Author: 	
   */
-  function queryoptions($options)
+  function truncate($table)
   {
-    return useroptions(['single_row' => true,
-                        'force_array' => false,
-                        'array_type' => MYSQLI_ASSOC,
-                        'key_value' => false,
-                        'dimensions' =>null],$options);
-  } /* options */
+    $this->query("TRUNCATE TABLE $table");
+  } /* truncate */
+
 
   /*    Title: 	update_column
-      Purpose:	multi update using prepared statement
-      Created:	Sat May 22 09:46:23 2021
-      Author: 	
-*/
-  function update_column($table,$current,$new,$key,$id)
-{
-  $when=[];
-  $in=[];
-  $query="UPDATE $table SET $key = (case"; 
-  foreach($new as $row => $x) {
-    if($current[$row][$key] != $x[$key])	{
-      $query .= " WHEN $id = ? THEN ?";
-      $when[]=$current[$row][$id];
-      $when[]=$x[$key];
-      $in[]=$current[$row][$id];
+        Purpose:	multi update using prepared statement
+        Created:	Sat May 22 09:46:23 2021
+        Author: 	
+  */
+  function update_column($table,$current,$new,$column,$id='')
+  {
+    if(empty($id))	{
+      $id=$this->primary_key($table);
     }
-  }
-  if(!empty($in))	{ //update
-    $data = array_merge($when,$in);
-    $nupdate=count($in);
-    $questionmarks = array_fill(0,$nupdate,'?');
-    // $questionmarks="(".implode(", ",$questionmarks).")";
-    $query .= " END) WHERE $id in (".implode(", ",$questionmarks).")";
-  } else { // nothing to update
-    return;
-  }
-  $whentypestr=$this->type_str($table,[$id,$key]);
-  $intypestr=substr($whentypestr,0,1);
-  $typestr=str_repeat($whentypestr,$nupdate).str_repeat($intypestr,$nupdate);
-  $this->prepared($query,$typestr,$data);
-} /* update_column */
+    $when=[];
+    $in=[];
+    $query="UPDATE $table SET $column = (case"; 
+    foreach($new as $row => $x) {
+      if($current[$row][$column] != $x[$column])	{
+        $query .= " WHEN $id = ? THEN ?";
+        $when[]=$current[$row][$id];
+        $when[]=$x[$column];
+        $in[]=$current[$row][$id];
+      }
+    }
+    if(!empty($in))	{ //update
+      $data = array_merge($when,$in);
+      $nupdate=count($in);
+      $questionmarks = array_fill(0,$nupdate,'?');
+      // $questionmarks="(".implode(", ",$questionmarks).")";
+      $query .= " END) WHERE $id in (".implode(", ",$questionmarks).")";
+    } else { // nothing to update
+      return;
+    }
+    $whentypestr=$this->type_str($table,[$id,$column]);
+    $intypestr=substr($whentypestr,0,1);
+    $typestr=str_repeat($whentypestr,$nupdate).str_repeat($intypestr,$nupdate);
+    $this->prepared($query,$typestr,$data);
+  } /* update_column */
 
   
   /*    Title: 	prepared
@@ -84,6 +84,7 @@ class Qdb extends mysqli
   */
   function prepared($query='',$types,$data=[],$options=[])
   {
+                        
     if(!is_array($data))	{
       $data=[$data];
     }
@@ -134,7 +135,7 @@ class Qdb extends mysqli
       return $affected_rows;
     }
     //    pre_r($result,'$result');
-    return $this->format_result($result,$this->queryoptions($options));
+    return $this->format_result($result,$options);
   } /* prepared */
 
   
@@ -161,7 +162,14 @@ class Qdb extends mysqli
     }
 
     $rows = $result->num_rows;
-    extract($options);
+    $opts = useroptions(['table' => '',
+                         'single_row' => true,
+                         'force_array' => false,
+                         'array_type' => MYSQLI_ASSOC,
+                         'key_value' => false,
+                         'dimensions' => null,
+                         'array_keys' => ''],$options);
+    extract($opts);
 
     $A = $result->fetch_all($array_type);
 
@@ -177,8 +185,13 @@ class Qdb extends mysqli
     if(is_array(reset($A)) && $dimensions==1)	{
       $A=array_merge(...$A);
     }
-    
 
+    if(!empty($table) && empty($array_keys))	{
+      $array_keys=$this->primary_key($table);
+    }
+    if(is_array($A) && !empty($array_keys))	{
+      $A=array_combine(array_column($A,$array_keys),$A);
+    }
     
     if(self::$verbose==true)	{
       pre_r($A,"<b>Query Result</b>");
@@ -205,53 +218,71 @@ class Qdb extends mysqli
                        $this->error . 
                        nl2br("\nQuery:\n<code>$query</code>"));
 
-    $result = $this->format_result($result,$this->queryoptions($options));
+    $result = $this->format_result($result,$options);
 
     return $result;
   }
 
-/*    Title: 	column_types
-      Purpose:	
-      Created:	Sat May 22 08:31:59 2021
-      Author: 	
-*/
+  /*    Title: 	column_types
+        Purpose:	
+        Created:	Sat May 22 08:31:59 2021
+        Author: 	
+  */
   function column_types($table,$keys=[])
-{
-  $str = empty($keys) ? "" : " AND COLUMN_NAME IN ('".implode("', '",$keys)."')";
-  return $this->query("SELECT COLUMN_NAME, DATA_TYPE ".
-                        "FROM INFORMATION_SCHEMA.COLUMNS " .
-                        "WHERE ".
-                        "TABLE_NAME = '$table'$str",
-                      ['key_value' => true,
-                       'single_row' => false]);
+  {
+    $str = empty($keys) ? "" : " AND COLUMN_NAME IN ('".implode("', '",$keys)."')";
+
+    $column_types  =$this->query("SELECT COLUMN_NAME, DATA_TYPE ".
+                                 "FROM INFORMATION_SCHEMA.COLUMNS " .
+                                 "WHERE ".
+                                 "TABLE_NAME = '$table'",
+                                 ['key_value' => true,
+                                  'single_row' => false]);
+    if(empty($keys))	{
+      return $column_types;
+    }
+    $column_names=array_keys($column_types);
+    //  pre_r($column_types,'$column_types*');
+    $data=[];
+    foreach($keys as $key) {
+      if(!in_array($key,$column_names))	{
+        exit("ERROR Qdb column_types: $key not present in database table $table");
+      }
+      $data[$key]=$column_types[$key];
+    }
+
   
-} /* column_types */
+    return $data;
+  
+  } /* column_types */
 
   /*    Title: 	type_str
-      Purpose:	return type string for prepared queries
-      Created:	Sat May 22 09:05:31 2021
-      Author: 	
-*/
-function type_str($table,$keys=[])
-{
-  $types=$this->column_types($table,$keys);
-  $prepared='';
-  //  pre_r($types,'$types');
-  foreach($keys as $key) {
-    if(in_array($types[$key],['int','bit','timestamp']))	{
-      $prepared .= 'i';
-    } elseif($types[$key]=='blob')	{
-      $prepared .= 'b';
-    } elseif(in_array($types[$key],['double','float']))	{
-      $prepared .= 'd';
-    } elseif(in_array($types[$key],['varchar','char','longtext']))	{
-      $prepared .= 's';
-    } else {
-      exit("Qdb type_str unknown type: ".$types[$key]);
+        Purpose:	return type string for prepared queries
+        Created:	Sat May 22 09:05:31 2021
+        Author: 	
+  */
+  function type_str($table,$keys=[])
+  {
+    $types=$this->column_types($table,$keys);
+    $prepared='';
+    // pre_r($table,'$table');
+    // pre_r($keys,'$keys');
+    // pre_r($types,'$types');
+    foreach($keys as $key) {
+      if(in_array($types[$key],['int','bit','timestamp']))	{
+        $prepared .= 'i';
+      } elseif($types[$key]=='blob')	{
+        $prepared .= 'b';
+      } elseif(in_array($types[$key],['double','float']))	{
+        $prepared .= 'd';
+      } elseif(in_array($types[$key],['varchar','char','longtext']))	{
+        $prepared .= 's';
+      } else {
+        exit("Qdb type_str unknown type: ".$types[$key]);
+      }
     }
-  }
-  return $prepared;
-} /* type_str */
+    return $prepared;
+  } /* type_str */
 
   /*    Title: 	fieldinfo
         Purpose:	
@@ -292,6 +323,7 @@ function type_str($table,$keys=[])
         $info->timestamp = true;
       }
     }
+    unset($info);
     return array_combine(array_column($fieldinfo,'name'),
                          $fieldinfo);
   } /* fieldinfo */
@@ -306,6 +338,98 @@ function type_str($table,$keys=[])
     $result=$this->query("SHOW KEYS FROM $table WHERE Key_name = 'PRIMARY'");
     return $result['Column_name'];
   } /* primary_key */
+
+  /*    Title: 	update
+        Purpose:	as update_or_insert with stricter rules
+        Created:	Mon Jul 19 17:45:14 2021
+        Author: 	
+  */
+  function update($table,$A,$keys=[],$where=[],$options=[])
+  {
+    if(!$A instanceof datatable)	{
+      $A = new datatable($A);
+    }
+    
+    $opts = useroptions(['map' => []],$options);
+    if(!empty($opts['map']))	{
+      $A = clone $A;
+      $A->rename_keys($opts['map']);
+    }
+    
+    if(empty($keys))	{
+      $keys=$A->column_names();
+    }
+    $column_types=$this->column_types($table);
+    // pre_r($column_types,'$column_types');
+    $column_names=array_keys($column_types);
+    if(count($keys) != count(array_intersect($keys,$column_names)))	{
+      pre_r($keys,'$keys');
+      pre_r($column_names,'$column_names');
+      exit("ERROR Qdb: update not all keys are present in database table.");
+    }
+    if(count($where) != count(array_intersect($column_names,$where)))	{
+      pre_r($where,'$where');
+      pre_r($column_names,'$column_names');
+      exit("ERROR Qdb: update not all wherekeys are present in database table.");
+    }
+    $column_names=$A->column_names();
+    if(count($keys) != count(array_intersect($keys,$column_names)))	{
+      pre_r($keys,'$keys');
+      pre_r($column_names,'$column_names');
+      exit("ERROR Qdb: update not all keys are present in data.");
+    }
+
+    if(count($where) != count(array_intersect($column_names,$where)))	{
+      pre_r($where,'$where');
+      pre_r($column_names,'$column_names');
+      exit("ERROR Qdb: update not all wherekeys are present in data.");
+    }
+
+    // get all table data and use primary key as keys
+    $Xdb=$this->query("SELECT * FROM $table",['single_row' => false,
+                                              'table' => $table]);
+    if(empty($Xdb))	{
+      //pre_r($Xdb,'$Xdb');
+      $absent=$A->data;
+    } else {
+      // check wheather new data was already present and just needs an update
+      // otherwise it should be inserted
+      $split=$A->search($Xdb,$where);
+      // pre_r($split,'$split');
+
+      // create $absent and $present
+      extract($split);
+    }
+
+
+    if(isset($absent) && !empty($absent))	{
+      $Ainsert=new datatable($absent);
+      $insertId=$this->insert($table,$Ainsert->columns($keys));
+    }
+
+    if(isset($present) && !empty($present))	{
+      $keys=array_diff($keys,$where);
+      foreach($keys as $column) {
+        $this->update_column($table,$Xdb,$present,$column);
+      }
+      $updateId = count($present)>1 ? array_keys($present) : key($present);
+    }
+    
+    if(isset($insertId) && isset($updateId))	{
+      return ['insert' => $insertId,
+              'update' => $updateId];
+    }
+    
+    if(isset($insertId))	{
+      return $insertId;
+    }
+    
+    if(isset($updateId))	{
+      return $updateId;
+    }
+
+    return false;
+  } /* update */
 
   
   /*    Title: 	update_or_insert
@@ -323,18 +447,18 @@ function type_str($table,$keys=[])
     //pre_r($A,'$A');
 
     // get all table data
-    $X=$this->query("SELECT * FROM $table",['single_row' => false]);
-    if(empty($X))	{
-      //pre_r($X,'$X');
+    $Xdb=$this->query("SELECT * FROM $table",['single_row' => false]);
+    if(empty($Xdb))	{
+      //pre_r($Xdb,'$Xdb');
       $absent=$A->data;
     } else {
       $prim=$this->primary_key($table);
       // check wheather new data was already present and just needs an update
       // otherwise it should be inserted
-      $split=$A->search($X,$where,$prim);
-      pre_r($split,'$split');
+      $split=$A->search($Xdb,$where);
+      // pre_r($split,'$split');
       if(!empty($split))	{
-        $keys=array_intersect(array_keys(reset($X)),
+        $keys=array_intersect(array_keys(reset($Xdb)),
                               $keys);
       }
       extract($split);
@@ -344,7 +468,7 @@ function type_str($table,$keys=[])
       if(empty($keys))	{
         $keys=array_keys(reset($absent));
       }
-      pre_r($keys,'$keys');
+      // pre_r($keys,'$keys');
       $Ainsert=new datatable($absent);
       $absent=$Ainsert->columns($keys);
       //pre_r($Ainsert,'$absent');
@@ -353,14 +477,14 @@ function type_str($table,$keys=[])
 
     if(isset($present) && !empty($present))	{
       if(empty($keys))	{
-        $keys=array_keys(reset($X));
+        $keys=array_keys(reset($Xdb));
       }
       $keys=array_diff($keys,$where);
       //pre_r($present,'$present');
       //pre_r($keys,'$keys');
       foreach($keys as $key) {
         //        pre_r($key,'update: $key');
-        $this->update_column($table,$X,$present,$key,$prim);
+        $this->update_column($table,$Xdb,$present,$key,$prim);
       }
     }
   } /* update_or_insert */
@@ -368,7 +492,7 @@ function type_str($table,$keys=[])
   /*    Title: 	map_keys
         Purpose:	helper function to prepare insert/update data
         Steps: 1 convert $A into a 2 dimensional datatable
-               2 test whether columns in A are numeric
+        2 test whether columns in A are numeric
         Returns a datatable object with keys that are present in $table
         Created:	Sat May 22 11:44:48 2021
         Author: 	
@@ -376,19 +500,8 @@ function type_str($table,$keys=[])
   function map_keys($table,$A,$keys)
   {
     // step 1 Make sure $A is a valid 2D datatable
-    if(is_array($A))	{
-      //$a is the first element of $A
-      $a=reset($A);
-      if(!is_array($a))	{
-        $a=$A;
-        $A=[$A];
-      }
+    if(!$A instanceof datatable)	{
       $A = new datatable($A);
-    } else {
-      $a=reset($A->data);
-      if(!is_array($a))	{
-        $A->data=[$A->data];
-      }
     }
     
     // step 2 data with numerical fields can only be used when number of fields match
@@ -396,6 +509,7 @@ function type_str($table,$keys=[])
       //      pre_r($A,'$A');
       $nkeys=count(reset($A->data));
       $fieldinfo = $this->fieldinfo($table);
+      // pre_r($fieldinfo,'$fieldinfo');
       if(count($fieldinfo)>$nkeys)	{
         $flag=false;
         $extra_fields = ['primary','timestamp'];
@@ -417,36 +531,16 @@ function type_str($table,$keys=[])
       foreach($A->data as &$x) {
         $x = array_combine($field_keys,$x);
       }
+      unset($x);
       return $A;
     }
 
-    /*
-    pre_r($A,'$A');
-    pre_r($field_keys,'$field_keys');
-    // At this point we have an associative datatable
-    if(!empty($keys))	{
-      pre_r($keys,'$keys');
-      $A=$A->columns($keys);
-      $tmp_keys = new datatable($keys);
-      pre_r($tmp_keys,'$tmp_keys');
-      // rename data keys so they match $table keys
-      if($tmp_keys->is_associative())	{
-      echo ".hehe2";
-        $field_keys=array_keys($keys);
-      echo ".hehe3";
-        foreach($A->data as &$x) {
-          $x = array_combine($field_keys, array_values($x));
-        }
-      }
-    }
-    */
     if(!empty($keys))	{ // only preserve keys to update
       $A=$A->columns($keys);
     }
     //    pre_r($A,'$A');
     return $A;
   } /* map_keys */
-
 
   
   /*    Title: 	insert
@@ -459,7 +553,7 @@ function type_str($table,$keys=[])
 
     $A=$this->map_keys($table,$A,$keys);
     
-    // get type string
+    // get type string from datatable
     $type_str = $A->gettype([],true);
     $field_keys=$A->column_names();
     $nkeys = count($field_keys);
@@ -468,43 +562,20 @@ function type_str($table,$keys=[])
     $values_str = " VALUES".$questionmarks;
     $fields = implode(", ",$field_keys);
 
-    if(false)	{
-      // 100 times takes around 16 seconds
-      $prepare_str="INSERT INTO $table ($fields)".$values_str;
-      $stmt = $this->prepare($prepare_str);
-      foreach($A->data as $x) {
-        $v=array_values($x);
-        $stmt->bind_param($type_str,...$v);
-        $stmt->execute();
-      }
-      $stmt->close();
-    } else {
-      // 100 times takes around 5 seconds
-      $nrows=count($A->data);
-      $type_str = array_fill(0,$nrows,$type_str);
-      $type_str=implode('',$type_str);
-      $questionmarks = implode(", ",array_fill(0,$nrows,$questionmarks));
-      $values_str = " VALUES".$questionmarks;
-      $prepare_str="INSERT INTO $table ($fields)".$values_str;
-      $v=$A->vector();
-      $this->prepared($prepare_str,$type_str,$v);
-      /*      
-      $stmt = $this->prepare($prepare_str);
-      $stmt->bind_param($type_str,...$v);
-      $stmt->execute();
-      $stmt->close();
-      */
-    }
+    // 100 times takes around 5 seconds
+    $nrows=count($A->data);
+    $type_str = array_fill(0,$nrows,$type_str);
+    $type_str=implode('',$type_str);
+    $questionmarks = implode(", ",array_fill(0,$nrows,$questionmarks));
+    $values_str = " VALUES".$questionmarks;
+    $prepare_str="INSERT INTO $table ($fields)".$values_str;
+    $v=$A->vector();
+    $this->prepared($prepare_str,$type_str,$v);
     
-    //    pre_r($prepare_str,'$prepare_str');
-    //    pre_r($type_str,'$type_str');
-    //    pre_r($v,'$v');
+    $id = $nrows>1 ? range($this->insert_id-$nrows+1,$this->insert_id) : $this->insert_id;
+
     return $this->insert_id;
   } /* insert */
-
-  /*  function __destruct() {
-    //print "Destroying \n";
-    $this->close();
-    }*/
+  
 } /* Qdb */
 ?>
