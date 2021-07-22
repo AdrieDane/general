@@ -1,6 +1,6 @@
 <?php
-  // Excel date numbers represent the number of days that have passed since January 1, 1900
-  // MATLAB date numbers represent the number of days that have passed since January 1, 0000
+// Excel date numbers represent the number of days that have passed since January 1, 1900
+// MATLAB date numbers represent the number of days that have passed since January 1, 0000
 define("EXCEL_DATE_OFFESET" , 25569);
 define("SECONDS_PER_DAY" , 86400);
 define("PHP_DATE_START" , 5000000);
@@ -17,15 +17,15 @@ class Dateconvert
 
     if($informat=='auto')	{
       if(is_numeric($indate)) {
-	if($indate>PHP_DATE_START)	{
-	  $informat = 'PHP';
-	} elseif($indate>MATLAB_DATE_START)	{
-	  $informat = 'matlab';
-	} else {
-	  $informat = 'excel';
-	}
+        if($indate>PHP_DATE_START)	{
+          $informat = 'PHP';
+        } elseif($indate>MATLAB_DATE_START)	{
+          $informat = 'matlab';
+        } else {
+          $informat = 'excel';
+        }
       } else { // not recomended
-	$informat = FORM_DATE_FORMAT;
+        $informat = FORM_DATE_FORMAT;
       }
     }
 
@@ -50,15 +50,15 @@ class Dateconvert
     
   }
 
-/*    Title: 	as_string
-      Purpose:	convert timestamp to formatted string
-      Created:	Sat Apr 10 11:22:45 2021
-      Author: 	Adrie Dane
-*/
-function as_string($fmt=FORM_DATE_FORMAT)
-{
-  return date($fmt,$this->PHP);
-} /* as_string */
+  /*    Title: 	as_string
+        Purpose:	convert timestamp to formatted string
+        Created:	Sat Apr 10 11:22:45 2021
+        Author: 	Adrie Dane
+  */
+  function as_string($fmt=FORM_DATE_FORMAT)
+  {
+    return date($fmt,$this->PHP);
+  } /* as_string */
 
   
 }

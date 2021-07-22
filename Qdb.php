@@ -349,36 +349,43 @@ class Qdb extends mysqli
     if(!$A instanceof datatable)	{
       $A = new datatable($A);
     }
-    
+    if(!is_array($where))	{
+      $where=[$where];
+    }
     $opts = useroptions(['map' => []],$options);
     if(!empty($opts['map']))	{
       $A = clone $A;
       $A->rename_keys($opts['map']);
     }
     
-    if(empty($keys))	{
-      $keys=$A->column_names();
-    }
     $column_types=$this->column_types($table);
     // pre_r($column_types,'$column_types');
     $column_names=array_keys($column_types);
-    if(count($keys) != count(array_intersect($keys,$column_names)))	{
-      pre_r($keys,'$keys');
-      pre_r($column_names,'$column_names');
-      exit("ERROR Qdb: update not all keys are present in database table.");
-    }
+    
     if(count($where) != count(array_intersect($column_names,$where)))	{
       pre_r($where,'$where');
       pre_r($column_names,'$column_names');
       exit("ERROR Qdb: update not all wherekeys are present in database table.");
     }
-    $column_names=$A->column_names();
-    if(count($keys) != count(array_intersect($keys,$column_names)))	{
-      pre_r($keys,'$keys');
-      pre_r($column_names,'$column_names');
-      exit("ERROR Qdb: update not all keys are present in data.");
+    
+    if(empty($keys))	{
+      $keys=array_intersect($A->column_names(),$column_names);
+    } else {
+      if(count($keys) != count(array_intersect($keys,$column_names)))	{
+        pre_r($keys,'$keys');
+        pre_r($column_names,'$column_names');
+        exit("ERROR Qdb: update not all keys are present in database table.");
+      }
+      
+      $column_names=$A->column_names();
+      if(count($keys) != count(array_intersect($keys,$column_names)))	{
+        pre_r($keys,'$keys');
+        pre_r($column_names,'$column_names');
+        exit("ERROR Qdb: update not all keys are present in data.");
+      }
     }
 
+    $column_names=$A->column_names();
     if(count($where) != count(array_intersect($column_names,$where)))	{
       pre_r($where,'$where');
       pre_r($column_names,'$column_names');
@@ -401,19 +408,25 @@ class Qdb extends mysqli
       extract($split);
     }
 
-
+    $retval=['insert' => 0,'update' => 0, 'ambiguous' => []];
     if(isset($absent) && !empty($absent))	{
+      $retval['insert']=count($absent);
       $Ainsert=new datatable($absent);
       $insertId=$this->insert($table,$Ainsert->columns($keys));
     }
 
     if(isset($present) && !empty($present))	{
+      $retval['update']=count($present);
       $keys=array_diff($keys,$where);
       foreach($keys as $column) {
         $this->update_column($table,$Xdb,$present,$column);
       }
       $updateId = count($present)>1 ? array_keys($present) : key($present);
     }
+    if(isset($ambiguous) && !empty($ambiguous))	{
+      $retval['ambiguous']=new datatable($ambiguous);
+    }
+    return $retval;
     
     if(isset($insertId) && isset($updateId))	{
       return ['insert' => $insertId,

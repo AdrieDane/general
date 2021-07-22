@@ -60,7 +60,8 @@ class importtable extends datatable
            'rename' => [],
            'numeric' => [],
            'required' => [],
-           'datecol' =>[]];
+           'datecol' =>[],
+           'sql' => false];
 
     $opts=$this->useroptions($opts,$user_options);
 
@@ -114,7 +115,8 @@ class importtable extends datatable
     foreach($importtable as &$row) {
       $row = array_map('trim',$row);
     }
-
+    unset($row);
+    
     if(isset($opts['skiprows']) && $opts['skiprows']>0)	{
       $importtable=array_slice($importtable,$opts['skiprows']);
     }
@@ -130,6 +132,7 @@ class importtable extends datatable
         break;
       }
     }
+    unset($row);
     for(	$i=0;	$i<$start;	$i++)	{
       array_shift($importtable);
     }
@@ -147,6 +150,7 @@ class importtable extends datatable
           unset($row[$idx]);
         }
       }
+      unset($row);
     }
 
     // store the original header
@@ -183,6 +187,7 @@ class importtable extends datatable
           $head=static :: $rename[$head];
         }
       }
+      unset($head);
     }
 
     // determine which columns must be treated as numerical
@@ -200,6 +205,7 @@ class importtable extends datatable
           }
         }
       }
+      unset($head);
     }
 
 
@@ -224,7 +230,9 @@ class importtable extends datatable
       foreach($datecol as $field) {
         if(isset($x[$field]) && is_numeric($x[$field]) && $x[$field]>0)	{
           $x[$field]=date('Y-m-d',Excelsheet::timestamp($x[$field]));
-        }
+        } elseif($opts['sql']==true) {
+          $x[$field]='9999-12-31';
+        }          
       }
     }
     unset($x);

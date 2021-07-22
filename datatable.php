@@ -187,8 +187,11 @@ function unjsonify_fields($options=[])
         Created:	Mon May 17 09:41:07 2021
         Author: 	
   */
-  function columns($columns,$array=false)
+  function columns($columns,$options=[])
   {
+    $opts=useroptions(['array' => false,
+                       'remove' => false],$options);
+    extract($opts);
     if(!is_array($columns))	{
       $columns=[$columns];
     }
@@ -249,9 +252,9 @@ function unjsonify_fields($options=[])
 
   function search($A,$keys=[])
   {
-    echo "--->search";
-    pre_r($keys);
-    pre_r($A,'$A');
+    //    echo "--->search";
+    //    pre_r($keys);
+    //    pre_r($A,'$A');
     if(empty($A))	{
       //      pre_r($A,'$A',true);
       exit("datatable->search empty datatable<br>". pre_r($A,'$A',true));
@@ -278,8 +281,8 @@ function unjsonify_fields($options=[])
 
     // create two intermediate arrays with the same keys
     // $now they can be compared
-    $this_columns=$this->columns($keys,true);
-    $A_columns=$A->columns($keys,true);
+    $this_columns=$this->columns($keys,['array' => true]);
+    $A_columns=$A->columns($keys,['array' => true]);
 
     // pre_r($this_columns,'$this_columns');
     // pre_r($A_columns,'$A_columns');
@@ -296,7 +299,9 @@ function unjsonify_fields($options=[])
       if(empty($matched))	{
         $result['absent'][] = $this->data[$row];
       }elseif(count($matched)>1)	{
-        ;
+        $x=$this->data[$row];
+        $x['search_match']=implode(',',array_keys($matched));
+        $result['ambiguous'][]=$x;
       }else	{
         $result['present'][key($matched)] = $this->data[$row];
       }
