@@ -45,20 +45,36 @@ class Qdb extends mysqli
         Created:	Sat May 22 09:46:23 2021
         Author: 	
   */
-  function update_column($table,$current,$new,$column,$id='')
+  function update_column($table,$new,$column,$options=[])
   {
+    $opts=useroptions(['id' => '',
+                       'append' => false,
+                       'Xdb' => []],$options);
+    extract($opts);
+    
     if(empty($id))	{
       $id=$this->primary_key($table);
     }
+    if(empty($Xdb))	{
+      $Xdb=$this->query("SELECT $id, $column FROM $table");
+    }
+    
+    // make sure it is key => value
+    $Xdb=array_combine(array_column($Xdb,$id),$Xdb);
     $when=[];
     $in=[];
     $query="UPDATE $table SET $column = (case"; 
     foreach($new as $row => $x) {
-      if($current[$row][$column] != $x[$column])	{
+      if($Xdb[$row][$column] != $x[$column])	{
         $query .= " WHEN $id = ? THEN ?";
-        $when[]=$current[$row][$id];
-        $when[]=$x[$column];
-        $in[]=$current[$row][$id];
+        $when[]=$Xdb[$row][$id];
+        if($append==false)	{
+          $when[]=$x[$column];
+        } else {
+          $val=explode(',',$Xdb[$row][$column].','.implode(',',$x[$column]));
+          $val=implode(',',array_unique($val));
+        }
+        $in[]=$Xdb[$row][$id];
       }
     }
     if(!empty($in))	{ //update
@@ -419,7 +435,7 @@ class Qdb extends mysqli
       $retval['update']=count($present);
       $keys=array_diff($keys,$where);
       foreach($keys as $column) {
-        $this->update_column($table,$Xdb,$present,$column);
+        $this->update_column($table,$present,$column,['Xdb' => $Xdb]);
       }
       $updateId = count($present)>1 ? array_keys($present) : key($present);
     }
@@ -497,7 +513,8 @@ class Qdb extends mysqli
       //pre_r($keys,'$keys');
       foreach($keys as $key) {
         //        pre_r($key,'update: $key');
-        $this->update_column($table,$Xdb,$present,$key,$prim);
+        $this->update_column($table,$present,$key,['id' => $prim,
+                                                   'Xdb' => $Xdb]);
       }
     }
   } /* update_or_insert */
