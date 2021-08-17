@@ -70,16 +70,24 @@ class Bscell
         Author: 	Adrie Dane
   */
   function html($key,$row='',$options=[])
-  {
-    if(isset($this->hideoutput))	{
+  {/*
+    if(isset($this->hidecolumn))	{
       return '';
-    }
+      }*/
     $opts=useroptions(['head' => false,
+                       'visible' => true,
+                       'align' => [],
+                       'formatter' => [],
                        'data_only' => false],$options);
     extract($opts);
   
     if($head==true)	{
-      return "<th data-sortable='true' scope='col'>$key</th>";
+      $data_field=preg_replace('/\W/', '', $key);
+      $data_visible = $visible==true ? "" : " data-visible='false'";
+      $data_align = empty($align) ? "" : " data-halign='$align'  data-align='$align'";
+      $data_formatter = empty($formatter) ? "" : " data-formatter='$formatter'";
+      return "<th data-field='$data_field'$data_visible$data_align$data_formatter>$key</th>";
+      // data-sortable='true' scope='col'
     }
 
   
@@ -124,8 +132,12 @@ class Bscell
     if(isset($this->warning))	{
       $warn=[];
       foreach($this->warning as $warning) {
-        foreach($warning as $w) {
-          $warn[]=$w;
+        if(is_array($warning))	{
+          foreach($warning as $w) {
+            $warn[]=$w;
+          }
+        } elseif(is_string($warning)&& $warning!='') {
+          $warn[]=$warning;
         }
       }
       $warn=array_unique(array_filter($warn));

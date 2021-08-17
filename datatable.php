@@ -18,6 +18,16 @@ class datatable implements ArrayAccess, Iterator, Countable
       }
       return;
     }
+
+    if(is_string($data))	{
+      // assume json
+      $data = json_decode($data, true);
+      /*$data = $tmpdata;
+      $data=[];
+      foreach($tmpdata as $x) {
+        $data[] = json_decode(json_encode($x[0]), true);
+        }*/
+    }
     
     if(!is_array($data))	{
       $data=[$data];

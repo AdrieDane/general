@@ -424,29 +424,36 @@ class Qdb extends mysqli
       extract($split);
     }
 
-    $retval=['insert' => 0,'update' => 0, 'ambiguous' => []];
+    $Id=0;
+    $retval=['insert' => 0,'update' => 0, 'ambiguous' => [], 'Id' => $Id,
+             'log' => 'Update Table: ' . $table . '<ul>'];
     if(isset($absent) && !empty($absent))	{
-      $retval['insert']=count($absent);
+      $retval['insertId']=count($absent);
+      $retval['log'] .= '<li>Insertions: '.count($absent).' records';
       $Ainsert=new datatable($absent);
-      $insertId=$this->insert($table,$Ainsert->columns($keys));
+      $Id=$insertId=$this->insert($table,$Ainsert->columns($keys));
+      
     }
 
     if(isset($present) && !empty($present))	{
-      $retval['update']=count($present);
+      $retval['updateId']=count($present);
+      $retval['log'] .= '<li>Checks and/or Updates: '.count($present).' records';
       $keys=array_diff($keys,$where);
       foreach($keys as $column) {
         $this->update_column($table,$present,$column,['Xdb' => $Xdb]);
       }
-      $updateId = count($present)>1 ? array_keys($present) : key($present);
+      $Id=$updateId = count($present)>1 ? array_keys($present) : key($present);
     }
     if(isset($ambiguous) && !empty($ambiguous))	{
       $retval['ambiguous']=new datatable($ambiguous);
     }
+    $retval['log'] .= '</ul>';
+    $retval['Id'] = $Id;
     return $retval;
-    
+    /*
     if(isset($insertId) && isset($updateId))	{
       return ['insert' => $insertId,
-              'update' => $updateId];
+              'update' => $updateId,];
     }
     
     if(isset($insertId))	{
@@ -457,7 +464,7 @@ class Qdb extends mysqli
       return $updateId;
     }
 
-    return false;
+    return false; */
   } /* update */
 
   

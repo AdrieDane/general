@@ -15,9 +15,12 @@ class Bstable extends datatable
   public function __construct($data,$options=[]) 
   {
     $opts=['small' => true,
+           'data_toolbar' => true,
            'header' => true,
            'hide_column' => [],
            'show_column' => [],
+           'data_align' => [],
+           'data_formatter' => [],
            'id' => 'table',
            'cls' => 'table-sm table-hover',
            'column_width' => [],
@@ -29,12 +32,21 @@ class Bstable extends datatable
 
     //  $this->_data=array();
     if(!empty($data))	{
-      $hdrs=array_keys(array_values($data)[0]);
+      $hdrs=array_keys(array_values($this->data)[0]);
       $this->hdrs=array_combine(str_replace(' ','_',$hdrs),$hdrs);
     } else {
       $this->hdrs=array();
     }
     $this->options=useroptions($opts,$options);
+    $cols = array_keys(reset($this->data));
+    if(!empty($this->options['hide_column']))	{
+      $cols = array_diff($cols,$this->options['hide_column']);
+    }
+    if(!empty($this->options['show_column']))	{
+      $cols = array_intersect($cols,$this->options['show_column']);
+    }
+    $this->options['visible']=$cols;
+    
     $this->init_cells();
     if(isset($this->options['controls']))	{
       $this->set_inputs($this->options['controls']);
@@ -69,13 +81,13 @@ class Bstable extends datatable
     if(!empty($show_column))	{
       $cols = array_intersect($cols,$show_column);
     }
-  
+    // pre_r($cols,'$cols');
     $this->cells=array();
     foreach($this->data as $row => $values) {
       foreach($values as $key => $value) {
         $cell_options=[];
         if(!in_array($key,$cols))	{
-          $cell_options['hideoutput']=true;
+          $cell_options['hidecolumn']=true;
         }
         if(in_array($key,array_keys($column_width)))	{
           $cell_options['width']=$column_width[$key];
@@ -121,11 +133,11 @@ class Bstable extends datatable
     foreach($this->cells as $row => &$cell) {
       foreach($this->hdrs as $col) {
         if(in_array($col,$columns))	{
-          if(isset($cell[$col]->hideoutput))	{
-            unset($cell[$col]->hideoutput);
+          if(isset($cell[$col]->hidecolumn))	{
+            unset($cell[$col]->hidecolumn);
           }
         } else {
-          $cell[$col]->hideoutput=true;
+          $cell[$col]->hidecolumn=true;
         }
       }
     }
@@ -248,21 +260,31 @@ class Bstable extends datatable
 
     // No create the table
     $str .= $small==true ? "<small>\n" : "";
-    $str .= "<div id='toolbar'>";
-    if($this->data_only==true)	{
-      $str .= "<input type='submit' value='Edit Data' name='data_edit' class='btn btn-secondary btn-sm'><br><br>\n";
+    if($data_toolbar==true)	{
+      $str .= "<div id='toolbar'>";
+      if($this->data_only==true)	{
+        $str .= "<input type='submit' value='Edit Data' name='data_edit' class='btn btn-secondary btn-sm'><br><br>\n";
+      }
+      else	{
+        $str .= "<input type='submit' value='Data Only' name='data_only' class='btn btn-secondary btn-sm'>\n";
+        $str .= "<input type='submit' value='Accept Changes' name='data_update' class='btn btn-secondary btn-sm'><br><br>\n";
+      }
+      $str .= "</div>";
+      $toolbar=" data-toolbar='#toolbar'";
+    } else {
+      $toolbar="";
     }
-    else	{
-      $str .= "<input type='submit' value='Data Only' name='data_only' class='btn btn-secondary btn-sm'>\n";
-      $str .= "<input type='submit' value='Accept Changes' name='data_update' class='btn btn-secondary btn-sm'><br><br>\n";
-    }
-    $str .= "</div>";
-  
-    $str .= "<table data-toggle='table' data-toolbar='#toolbar'  data-search='true'  id='$id' class='table $cls' 
-  data-show-toggle='true' data-show-columns='true'  data-silent-sort='false'
+
+    $str .= "<table data-toggle='table'$toolbar data-search='true'  id='$id' class='table $cls' 
+  data-silent-sort='false'
   data-show-fullscreen='true' 
-  data-show-pagination-switch='true'
-  data-show-toggle='true'>\n";
+  data-show-columns='true'  
+  data-show-toggle='true'
+  data-show-pagination-switch='true'>\n";
+
+    //  data-show-columns='true'  
+    //  data-show-toggle='true'
+    
     //  data-sort-class='table-active'
     //  data-pagination='true'
     //  data-show-export='true'
@@ -272,11 +294,29 @@ class Bstable extends datatable
     //  exit;
     if($header==true)	{
       $str.= "  <thead>\n";
-      $str.= "    <tr>\n";
-      $str.= "      ";
+      $str.= "    <tr>";
       $first_row = reset($this->cells);
+      $idx_align=0;
       foreach($first_row as $key => $cell) {
-        $str .= $cell->html($key,key($first_row),['head' => true]);
+        $str.= "\n      ";
+        
+        $visible = in_array($key,$this->options['visible']);
+        if($visible==true && !empty($data_align) && $idx_align<count($data_align))	{
+          $align=$data_align[$idx_align];
+          $idx_align++;
+        } else {
+          $align=[];
+        }
+
+        $formatter = in_array($key,array_keys($data_formatter)) ?
+                   $data_formatter[$key] :
+                   [];
+        $cell_options=['head' => true,
+                       'visible' => $visible,
+                       'align' => $align,
+                       'formatter' => $formatter];
+        //        pre_r($cell_options);
+        $str .= $cell->html($key,key($first_row),$cell_options);
       }
       $str.= "    </tr>\n";
       $str.= "  </thead>\n";
