@@ -1,8 +1,9 @@
 <?php
-function randomPassword($length=16,$npasswords=1, $characters='lower_case,upper_case,numbers') {
+function randomPassword($length=16,$npasswords=1, $characters='lower_case,upper_case,numbers,underscore') {
  
   // $length - the length of the generated password
   // $npasswords - number of passwords to be generated
+  // if $npasswords==1 returns a string otherwise an array of $npasswords passwords
   // $characters - types of characters to be used in the password
   
   $pat="/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{".$length.",}/";
@@ -38,8 +39,12 @@ function randomPassword($length=16,$npasswords=1, $characters='lower_case,upper_
     }
     $passwords[] = $pass;
   }
-     
-  return $passwords; // return the generated password
+  // return the generated passwords
+  if($npasswords==1)	{
+    return $passwords[0];
+  }else	{
+    return $passwords;
+  }
 }
  
 

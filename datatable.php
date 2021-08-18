@@ -60,6 +60,18 @@ function rename_keys($rename=[])
   }
 } /* rename_keys */
 
+
+/*    Title: 	column_to_keys
+      Purpose:	sets data array keys to values in column
+      Created:	Tue Aug 17 11:10:02 2021
+      Author: 	
+*/
+function column_to_keys($column)
+{
+  $this->data=array_combine(array_column($this->data,'projectId'),$this->data);
+} /* column_to_keys */
+
+  
   /*    Title: 	count_columns
         Purpose:	
         Created:	Mon Jul 19 17:53:14 2021
