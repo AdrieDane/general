@@ -68,7 +68,7 @@ class Curlconnect
       // (C2) CURL FETCH OK
       // echo $this->json;
       $this->result = $this->decode==true ?
-                    json_decode($this->json) : $this->json;
+                    json_decode($this->json,true) : $this->json;
       if(!isset($this->keep_json))	{
         unset($this->json);
       }
@@ -90,7 +90,7 @@ class Curlconnect
 function data()
 {
   $field = $this->data_field;
-  return isset($this->result->$field) ? $this->result->$field : [];
+  return isset($this->result[$field]) ? $this->result[$field] : [];
 } /* get_data */
 
 
