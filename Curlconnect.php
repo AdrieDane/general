@@ -45,7 +45,6 @@ class Curlconnect
   */
   function post($endpoint,$post,$options=[])
   {
-
     // (A) INIT CURL
     $ch = curl_init();
 
