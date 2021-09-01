@@ -19,6 +19,10 @@ class Siteinfo
   */
   function __construct($sub_site='cfmetabolomics',$start_dash=false)
   {
+    $this->site='';
+    $this->path='';
+    $this->file='';
+    $this->query_string='';
     $this->protocol=isset($_SERVER['HTTPS']) ? "https://" : "http://";
     $this->host=$_SERVER['HTTP_HOST'];
     $this->port=$_SERVER['SERVER_PORT'];

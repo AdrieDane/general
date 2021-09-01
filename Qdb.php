@@ -36,12 +36,13 @@ class Qdb extends mysqli
   */
   function truncate($table)
   {
-    $this->query("TRUNCATE TABLE $table");
+    return $this->query("TRUNCATE TABLE $table");
   } /* truncate */
 
 
   /*    Title: 	update_column
         Purpose:	multi update using prepared statement
+                  returns primary_keys of updated records
         Created:	Sat May 22 09:46:23 2021
         Author: 	
   */
@@ -63,6 +64,8 @@ class Qdb extends mysqli
     $Xdb=array_combine(array_column($Xdb,$id),$Xdb);
     $when=[];
     $in=[];
+
+    // check whether updates are required and build quiry (prepared statement)
     $query="UPDATE $table SET $column = (case"; 
     foreach($new as $row => $x) {
       if($Xdb[$row][$column] != $x[$column])	{
@@ -77,20 +80,39 @@ class Qdb extends mysqli
         $in[]=$Xdb[$row][$id];
       }
     }
-    if(!empty($in))	{ //update
-      $data = array_merge($when,$in);
-      $nupdate=count($in);
-      $questionmarks = array_fill(0,$nupdate,'?');
-      // $questionmarks="(".implode(", ",$questionmarks).")";
-      $query .= " END) WHERE $id in (".implode(", ",$questionmarks).")";
-    } else { // nothing to update
-      return;
+
+   //nothing to update
+    if(empty($in))	{
+      return [];
     }
+    
+    /* this is for debugging only
+   if($table=='samples')	{
+        return ['update_column' => 'nothing to update',$id => $in,'Xdb' => $Xdb];
+        }
+    */
+
+    // create the data $when is appended by $in is this correct ?
+    $data = array_merge($when,$in);
+
+    // finalize query
+    $nupdate=count($in);
+    $questionmarks = array_fill(0,$nupdate,'?');
+    $query .= " END) WHERE $id in (".implode(", ",$questionmarks).")";
+    // now the query is ready
+
+    // create type string for all questionmarks
     $whentypestr=$this->type_str($table,[$id,$column]);
     $intypestr=substr($whentypestr,0,1);
     $typestr=str_repeat($whentypestr,$nupdate).str_repeat($intypestr,$nupdate);
+
+    // run the update query with correct types and data
     $this->prepared($query,$typestr,$data);
-  } /* update_column */
+    return $in;
+
+      /*   
+    */
+    } /* update_column */
 
   
   /*    Title: 	prepared
@@ -362,109 +384,150 @@ class Qdb extends mysqli
   */
   function update($table,$A,$keys=[],$where=[],$options=[])
   {
+    /*    return ['table' => $table,
+            'A' => $A,
+            'keys' => $keys,
+            'where' => $where,
+            'options' => $options]; */
+
+    // make sure $A is a datatable
     if(!$A instanceof datatable)	{
       $A = new datatable($A);
     }
+
+    // make sure $where is an array
     if(!is_array($where))	{
       $where=[$where];
     }
+
+    // get the user options
     $opts = useroptions(['map' => []],$options);
+
+    
+    // rename keys in new array so they match the database table
     if(!empty($opts['map']))	{
       $A = clone $A;
       $A->rename_keys($opts['map']);
     }
-    
+
+    // get the column SQL types
     $column_types=$this->column_types($table);
     // pre_r($column_types,'$column_types');
+
+    // get and corresponding column SQL names
     $column_names=array_keys($column_types);
-    
+
+    // SOMETHING HAPPENS TWICE HERE
     if(count($where) != count(array_intersect($column_names,$where)))	{
-      pre_r($where,'$where');
-      pre_r($column_names,'$column_names');
-      exit("ERROR Qdb: update not all wherekeys are present in database table.");
+      //pre_r($where,'$where');
+      //pre_r($column_names,'$column_names');
+      //    return ['error' => 'fout'];
+      exit("ERROR Qdb: update not all wherekeys are present in database table."
+           .pre_r($where,'$where keys',true));
     }
-    
+
+    // make sure all columns to check for update are present in SQL table if not: return error
     if(empty($keys))	{
       $keys=array_intersect($A->column_names(),$column_names);
     } else {
       if(count($keys) != count(array_intersect($keys,$column_names)))	{
-        pre_r($keys,'$keys');
-        pre_r($column_names,'$column_names');
+        //pre_r($keys,'$keys');
+        //pre_r($column_names,'$column_names');
         exit("ERROR Qdb: update not all keys are present in database table.");
       }
       
       $column_names=$A->column_names();
       if(count($keys) != count(array_intersect($keys,$column_names)))	{
-        pre_r($keys,'$keys');
-        pre_r($column_names,'$column_names');
+        //pre_r($keys,'$keys');
+        //pre_r($column_names,'$column_names');
         exit("ERROR Qdb: update not all keys are present in data.");
       }
     }
 
     $column_names=$A->column_names();
     if(count($where) != count(array_intersect($column_names,$where)))	{
-      pre_r($where,'$where');
-      pre_r($column_names,'$column_names');
+      //pre_r($where,'$where');
+      //pre_r($column_names,'$column_names');
       exit("ERROR Qdb: update not all wherekeys are present in data.");
     }
+    // SOMETHING HAPPENS TWICE HERE
 
     // get all table data and use primary key as keys
     $Xdb=$this->query("SELECT * FROM $table",['single_row' => false,
                                               'table' => $table]);
     if(empty($Xdb))	{
-      //pre_r($Xdb,'$Xdb');
       $absent=$A->data;
+      $split=[];
     } else {
       // check wheather new data was already present and just needs an update
       // otherwise it should be inserted
+      // when appropiate it splits the data into present absent and ambiguous
+      // if nothing present $split['present'] will not be set etc.
+      // ambiguous means present more than once: $where should be unique
       $split=$A->search($Xdb,$where);
       // pre_r($split,'$split');
-
+      //      return $split;
       // create $absent and $present
       extract($split);
     }
-
-    $Id=0;
-    $retval=['insert' => 0,'update' => 0, 'ambiguous' => [], 'Id' => $Id,
-             'log' => 'Update Table: ' . $table . '<ul>'];
+    $nchecks = count($A->data);
+    $Id=$this->primary_key($table);
+    $retval=['table' => $table, 'primary' => $Id,
+             'lastId' => 0,
+             'nchecks' => $nchecks,
+             'inserted' => [], 'updated' => [],
+             'unchanged' => [],'ambiguous' => [], 
+             'log' => 'Update Table: ' . $table . '<ul>',
+             'split' => $split];
+    $retval['log'] .= '<li>Checked: '.$nchecks.' records';
     if(isset($absent) && !empty($absent))	{
-      $retval['insertId']=count($absent);
       $retval['log'] .= '<li>Insertions: '.count($absent).' records';
       $Ainsert=new datatable($absent);
       $Id=$insertId=$this->insert($table,$Ainsert->columns($keys));
-      
+      $retval['inserted']=range($Id,count($absent)-1+$Id);
     }
-
+    $updated=[];
     if(isset($present) && !empty($present))	{
-      $retval['updateId']=count($present);
-      $retval['log'] .= '<li>Checks and/or Updates: '.count($present).' records';
+      //      $retval['updateId']=count($present);
+      //      $retval['log'] .= '<li>Checks and/or Updates: '.count($present).' records';
       $keys=array_diff($keys,$where);
       foreach($keys as $column) {
-        $this->update_column($table,$present,$column,['Xdb' => $Xdb]);
+        
+        /* debugging only
+        if($table=='samples' && !in_array($column,['groupId','sample_name','matrix']))	{ //just return whatever update_column returns
+          return ['updates' => 'ha ha'.$column,
+                  'Xdb' => $Xdb,
+                  'present' => $present];
+                  }
+        */
+        // this returns prim key of updates
+        $column_updated = $this->update_column($table,$present,
+                                               $column,['Xdb' => $Xdb]);
+        
+        $updated = empty($column_updated) ? $updated : array_merge($updated,$column_updated);
       }
-      $Id=$updateId = count($present)>1 ? array_keys($present) : key($present);
+      $retval['updated']=array_unique($updated);
+      $retval['log'] .= '<li>Updates: '.count($updated).' records';
+      $retval['unchanged']=array_diff(array_keys($present),$retval['updated']);
+      $retval['log'] .= '<li>Unchanged: '.count($retval['unchanged']).' records';
+      //      $Id=$updateId = count($present)>1 ? array_keys($present) : key($present);
     }
+    foreach(['inserted','updated','unchanged'] as $field) {
+      if(!isset($retval[$field]) || empty($retval[$field]))	{
+        continue;
+      }
+      $mx=max($retval[$field]);
+      if($mx>$retval['lastId'])	{
+        $retval['lastId']=$mx;
+      }
+    }
+    
     if(isset($ambiguous) && !empty($ambiguous))	{
       $retval['ambiguous']=new datatable($ambiguous);
     }
     $retval['log'] .= '</ul>';
-    $retval['Id'] = $Id;
+    $retval['split']=$split;
     return $retval;
-    /*
-    if(isset($insertId) && isset($updateId))	{
-      return ['insert' => $insertId,
-              'update' => $updateId,];
-    }
-    
-    if(isset($insertId))	{
-      return $insertId;
-    }
-    
-    if(isset($updateId))	{
-      return $updateId;
-    }
-
-    return false; */
   } /* update */
 
   
