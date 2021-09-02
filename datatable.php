@@ -32,7 +32,9 @@ class datatable implements ArrayAccess, Iterator, Countable
     if(!is_array($data))	{
       $data=[$data];
     }
-    if(is_array(reset($data)))	{
+    if(empty($data))	{
+      $this->data=[];
+    } elseif(is_array(reset($data)))	{
       $this->data=$data;
     }  else { // force to two dimensions
       $this->data=[];
