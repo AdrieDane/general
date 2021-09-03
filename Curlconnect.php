@@ -14,8 +14,9 @@ class Curlconnect
                          'data' => 'data',
                          'info' => false],$options);
     $this->api= substr($api,-1)=='/' ? $api : $api.'/';
-    if(isset($opts['cookie']) && !empty($opts['cookie']))	{
-      $this->cookie_file=sys_get_temp_dir().'/'.$opts['cookie'];
+    if(isset($opts['cookie']) && $opts['cookie']==true)	{
+      //      $this->cookie_file=sys_get_temp_dir().'/'.$opts['cookie'];
+      $this->cookie_file=tempnam(sys_get_temp_dir(), 'cfm_');
     }
     $this->decode=false;
     if(isset($opts['json_decode']) && $opts['json_decode']==true)	{
