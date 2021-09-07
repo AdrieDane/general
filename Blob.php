@@ -134,11 +134,13 @@ function as_object($args=[],$obj_str='')
 */
   function as_object($args=[],$obj_str='')
 {
-
+  //pre_r($args,'$args');
+  //pre_r($this,'$blob');
   $dir = sys_get_temp_dir();
   $fname = $dir.'/'.$this->name;
-
+  
   $obj_str = empty($obj_str) ? $this->object : $obj_str;
+  //pre_r($obj_str,'$obj_str');
   if(empty($obj_str))	{
     exit("Blob->as_object() Object type/class unknown");
   }
@@ -147,6 +149,13 @@ function as_object($args=[],$obj_str='')
        ===FALSE) {
     exit("Could not create $obj_str from BLOB");
   }else{
+    if(!file_exists($fname))	{
+      exit("Blob->as_object() file $fname does not exist");
+    } else {
+      ;
+      // echo "File: $fname created<br>\n";
+    }
+    
     $obj = new $obj_str($fname,...$args);
     unlink($fname);
     return $obj;

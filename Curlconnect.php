@@ -38,7 +38,22 @@ class Curlconnect
     }    
   } /* __construct */
 
+  /*    Title: 	__destruct
+        Purpose:	cleaning
+        Created:	Mon Sep  6 13:32:48 2021
+        Author: 	
+  *
+  function __destruct()
+  {
+    if(isset($this->cookie_file) && file_exists($this->cookie_file))	{
+      unlink($this->cookie_file);
+      unset($this->cookie_file);
+    }
+    
+  } * __destruct */
 
+
+  
   /*    Title: 	post
         Purpose:	send data via post
         Created:	Sat Jun 19 09:25:36 2021
