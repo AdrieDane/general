@@ -475,8 +475,10 @@ class Qdb extends mysqli
     $retval=['table' => $table, 'primary' => $Id,
              'lastId' => 0,
              'nchecks' => $nchecks,
-             'inserted' => [], 'updated' => [],
-             'unchanged' => [],'ambiguous' => [], 
+             'inserted' => [],
+             'updated' => [],
+             'unchanged' => [],
+             'ambiguous' => [], 
              'log' => 'Update Table: ' . $table . '<ul>',
              'split' => $split];
     $retval['log'] .= '<li>Checked: '.$nchecks.' records';
