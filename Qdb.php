@@ -313,7 +313,7 @@ class Qdb extends mysqli
         $prepared .= 'b';
       } elseif(in_array($types[$key],['double','float']))	{
         $prepared .= 'd';
-      } elseif(in_array($types[$key],['varchar','char','longtext']))	{
+      } elseif(in_array($types[$key],['varchar','char','longtext','date']))	{
         $prepared .= 's';
       } else {
         exit("Qdb type_str unknown type: ".$types[$key]);
