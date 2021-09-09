@@ -438,6 +438,7 @@ class Qdb extends mysqli
       
       $column_names=$A->column_names();
       if(count($keys) != count(array_intersect($keys,$column_names)))	{
+          pre_r($A,'$A');
         pre_r($keys,'$keys');
         pre_r($column_names,'$column_names');
         exit("ERROR Qdb: update not all keys are present in data.");
