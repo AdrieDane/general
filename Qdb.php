@@ -438,8 +438,8 @@ class Qdb extends mysqli
       
       $column_names=$A->column_names();
       if(count($keys) != count(array_intersect($keys,$column_names)))	{
-        //pre_r($keys,'$keys');
-        //pre_r($column_names,'$column_names');
+        pre_r($keys,'$keys');
+        pre_r($column_names,'$column_names');
         exit("ERROR Qdb: update not all keys are present in data.");
       }
     }
@@ -450,7 +450,7 @@ class Qdb extends mysqli
       //pre_r($column_names,'$column_names');
       exit("ERROR Qdb: update not all wherekeys are present in data.");
     }
-    // SOMETHING HAPPENS TWICE HERE
+    // SOMETHING HAPPENS TWICE HERE 
 
     // get all table data and use primary key as keys
     $Xdb=$this->query("SELECT * FROM $table",['single_row' => false,
