@@ -70,7 +70,7 @@ function rename_keys($rename=[])
 */
 function column_to_keys($column)
 {
-  $this->data=array_combine(array_column($this->data,'projectId'),$this->data);
+  $this->data=array_combine(array_column($this->data,$column),$this->data);
 } /* column_to_keys */
 
   
