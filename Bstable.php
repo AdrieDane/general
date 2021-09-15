@@ -20,6 +20,7 @@ class Bstable extends datatable
            'hide_column' => [],
            'show_column' => [],
            'data_align' => [],
+           'data_sortable' => [],
            'data_formatter' => [],
            'id' => 'table',
            'cls' => 'table-sm table-hover',
@@ -235,7 +236,7 @@ class Bstable extends datatable
     //    pre_r($this->data,'data----');
     //    exit;
     extract($this->options);
-
+    // exit(pre_r($this->options,'options',true));
     $str='';
 
     if(isset($this->validate) && !empty($this->validate))	{
@@ -297,15 +298,24 @@ class Bstable extends datatable
       $str.= "    <tr>";
       $first_row = reset($this->cells);
       $idx_align=0;
+      $idx_sortable=0;
       foreach($first_row as $key => $cell) {
         $str.= "\n      ";
         
         $visible = in_array($key,$this->options['visible']);
+        
         if($visible==true && !empty($data_align) && $idx_align<count($data_align))	{
           $align=$data_align[$idx_align];
           $idx_align++;
         } else {
           $align=[];
+        }
+
+        if($visible==true && !empty($data_sortable) && $idx_sortable<count($data_sortable))	{
+          $sortable=$data_sortable[$idx_sortable];
+          $idx_sortable++;
+        } else {
+          $sortable=[];
         }
 
         $formatter = in_array($key,array_keys($data_formatter)) ?
@@ -314,6 +324,7 @@ class Bstable extends datatable
         $cell_options=['head' => true,
                        'visible' => $visible,
                        'align' => $align,
+                       'sortable' => $sortable,
                        'formatter' => $formatter];
         //        pre_r($cell_options);
         $str .= $cell->html($key,key($first_row),$cell_options);

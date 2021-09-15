@@ -2,7 +2,7 @@
 
 require_once 'utils.php';
 require_once 'STR_functions.php';
-require_once 'vendor/autoload.php';
+require_once '../vendor/autoload.php';
 include_once 'Siteinfo.php';
 include_once 'validate_column.php';
 include_once 'Optionsarray.php';
