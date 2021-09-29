@@ -53,7 +53,7 @@ function rename_keys($rename=[])
 {
   foreach($this->data as &$x) {
     foreach($rename as $old => $new) {
-      if(isset($x[$old]))	{
+      if(array_key_exists($old,$x))	{
         $x[$new]=$x[$old];
         unset($x[$old]);
       }

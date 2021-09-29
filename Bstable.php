@@ -22,12 +22,29 @@ class Bstable extends datatable
            'data_align' => [],
            'data_sortable' => [],
            'data_formatter' => [],
+           'data_title' => [],
            'id' => 'table',
            'cls' => 'table-sm table-hover',
            'column_width' => [],
            'validate' => [],
            'controls' => []];
-  
+
+    $this->options=useroptions($opts,$options);
+    if(isset($this->options['show_column'])&& !empty($this->options['show_column']))	{
+      $tmp_data=$data;
+      $data=[];
+      foreach($tmp_data as &$x) {
+        $y=[];
+        foreach($this->options['show_column']as $field) {
+          $y[$field] = $x[$field];
+        }
+        foreach(array_diff(array_keys($x),$this->options['show_column']) as $field) {
+          $y[$field] = $x[$field];
+        }
+        $data[]=$y;
+      }
+    }
+    
     parent::__construct($data);
     //    $this->ncols=count($this->data[0]);
 
@@ -38,7 +55,6 @@ class Bstable extends datatable
     } else {
       $this->hdrs=array();
     }
-    $this->options=useroptions($opts,$options);
     $cols = array_keys(reset($this->data));
     if(!empty($this->options['hide_column']))	{
       $cols = array_diff($cols,$this->options['hide_column']);
@@ -299,6 +315,7 @@ class Bstable extends datatable
       $first_row = reset($this->cells);
       $idx_align=0;
       $idx_sortable=0;
+      $idx_title=0;
       foreach($first_row as $key => $cell) {
         $str.= "\n      ";
         
@@ -309,6 +326,13 @@ class Bstable extends datatable
           $idx_align++;
         } else {
           $align=[];
+        }
+        
+        if($visible==true && !empty($data_title) && $idx_title<count($data_title))	{
+          $title=$data_title[$idx_title];
+          $idx_title++;
+        } else {
+          $title=[];
         }
 
         if($visible==true && !empty($data_sortable) && $idx_sortable<count($data_sortable))	{
@@ -324,6 +348,7 @@ class Bstable extends datatable
         $cell_options=['head' => true,
                        'visible' => $visible,
                        'align' => $align,
+                       'title' => $title,
                        'sortable' => $sortable,
                        'formatter' => $formatter];
         //        pre_r($cell_options);

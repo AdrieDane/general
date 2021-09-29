@@ -77,6 +77,7 @@ class Bscell
     $opts=useroptions(['head' => false,
                        'visible' => true,
                        'align' => [],
+                       'title' => [],
                        'sortable' => [],
                        'formatter' => [],
                        'data_only' => false],$options);
@@ -86,12 +87,13 @@ class Bscell
       $data_field=preg_replace('/\W/', '', $key);
       $data_visible = $visible==true ? "" : " data-visible='false'";
       $data_align = empty($align) ? "" : " data-halign='$align'  data-align='$align'";
+      $data_title = empty($title) ? "" : " data-title='$title'";
       if(!empty($sortable))	{
         $sortable == false ? 'false' : 'true';
       }
       $data_sortable = empty($sortable) ? "" : " data-sortable='$sortable'";
       $data_formatter = empty($formatter) ? "" : " data-formatter='$formatter'";
-      return "<th data-field='$data_field'$data_visible$data_align$data_formatter$data_sortable>$key</th>";
+      return "<th data-field='$data_field'$data_visible$data_align$data_title$data_formatter$data_sortable>$key</th>";
       // data-sortable='true' scope='col'
     }
 

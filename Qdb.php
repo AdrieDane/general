@@ -240,7 +240,7 @@ class Qdb extends mysqli
       echo pre_r($A,true),"<br>";
       }*/
     $result->close();
-    return $A;;
+    return $A;
   } /* format_result */
 
   
@@ -407,7 +407,9 @@ class Qdb extends mysqli
     // rename keys in new array so they match the database table
     if(!empty($opts['map']))	{
       $A = clone $A;
+      //      pre_r($A,'$A voor');
       $A->rename_keys($opts['map']);
+      //      pre_r($A,'$A na');
     }
 
     // get the column SQL types
@@ -441,7 +443,8 @@ class Qdb extends mysqli
           pre_r($A,'$A');
         pre_r($keys,'$keys');
         pre_r($column_names,'$column_names');
-        exit("ERROR Qdb: update not all keys are present in data.");
+        exit("ERROR Qdb: update not all keys are present in data.".
+             pre_r($A,'$data',true));
       }
     }
 
@@ -449,7 +452,9 @@ class Qdb extends mysqli
     if(count($where) != count(array_intersect($column_names,$where)))	{
       //pre_r($where,'$where');
       //pre_r($column_names,'$column_names');
-      exit("ERROR Qdb: update not all wherekeys are present in data.");
+      exit("ERROR Qdb: update not all wherekeys are present in data.".
+           pre_r($where,'$where keys',true).
+             pre_r($A,'$data',true));
     }
     // SOMETHING HAPPENS TWICE HERE 
 
@@ -657,8 +662,9 @@ class Qdb extends mysqli
     $A=$this->map_keys($table,$A,$keys);
     
     // get type string from datatable
-    $type_str = $A->gettype([],true);
+    // $type_str = $A->gettype([],true);
     $field_keys=$A->column_names();
+    $type_str = $this->type_str($table,$field_keys);
     $nkeys = count($field_keys);
     $questionmarks = array_fill(0,$nkeys,'?');
     $questionmarks="(".implode(", ",$questionmarks).")";
