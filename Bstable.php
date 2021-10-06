@@ -30,15 +30,27 @@ class Bstable extends datatable
            'controls' => []];
 
     $this->options=useroptions($opts,$options);
-    if(isset($this->options['show_column'])&& !empty($this->options['show_column']))	{
+
+    // set visible columns
+    $cols = array_keys(reset($data));
+    if(!empty($this->options['hide_column']))	{
+      $cols = array_diff($cols,$this->options['hide_column']);
+    }
+    if(!empty($this->options['show_column']))	{
+      $cols = array_intersect($this->options['show_column'],$cols);
+    }
+    $this->options['visible']=$cols;
+
+    // move visible columns to the front
+    if(isset($cols)&& !empty($cols))	{
       $tmp_data=$data;
       $data=[];
       foreach($tmp_data as &$x) {
         $y=[];
-        foreach($this->options['show_column']as $field) {
+        foreach($cols as $field) {
           $y[$field] = $x[$field];
         }
-        foreach(array_diff(array_keys($x),$this->options['show_column']) as $field) {
+        foreach(array_diff(array_keys($x),$cols) as $field) {
           $y[$field] = $x[$field];
         }
         $data[]=$y;
@@ -55,14 +67,6 @@ class Bstable extends datatable
     } else {
       $this->hdrs=array();
     }
-    $cols = array_keys(reset($this->data));
-    if(!empty($this->options['hide_column']))	{
-      $cols = array_diff($cols,$this->options['hide_column']);
-    }
-    if(!empty($this->options['show_column']))	{
-      $cols = array_intersect($cols,$this->options['show_column']);
-    }
-    $this->options['visible']=$cols;
     
     $this->init_cells();
     if(isset($this->options['controls']))	{

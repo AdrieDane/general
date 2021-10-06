@@ -10,8 +10,10 @@ class Bsform extends Bsdata
   {
     $opts=['header' => false,
            'small' => false,
+           'accept_button' => true,
            'column_width' => [30, 70],
            'show_column' => ['title', 'control'],
+           'align' => ['left', 'right'],
            //	 'hide_column' => ['key','tooltip','td','value','input',
            //			   'error','warning','auto','type','cell'],
            'form' => true,
@@ -24,10 +26,13 @@ class Bsform extends Bsdata
       $opts=$this->useroptions($opts,$options);
     }
     //pre_r($file);
-  
-    $tbl = new importtable($file,$opts);
-    //  pre_r($tbl,'$tbl');
-  
+    if(is_array($file))	{
+      $tbl=new datatable($file);
+    } else {
+      $tbl = new importtable($file,$opts);
+    }
+    //pre_r($tbl,'$tbl');
+    //exit;
     $keys=array_keys($tbl->data);
     $keys=array_combine($keys,$keys);
     foreach($tbl->data as $k => &$x) {
@@ -196,15 +201,15 @@ class Bsform extends Bsdata
       }
       $opts['name']=$x['key'];
 
-      if(is_numeric($x['input'])) {
+      if(is_numeric($x['input'])) { // textarea
         $type='textarea';
         $opts['rows']=$x['input'];
-      } elseif(substr($x['input'],0,1)=='[')	{
+      } elseif(substr($x['input'],0,1)=='[')	{ // multiple controls
         $parts=explode(']',substr($x['input'],1));
         list($type,$count)=$parts;
         $opts['name'] .= "[]";
         $opts['array']= $count;
-      } elseif(strpos($x['input'],'|')!==false) {
+      } elseif(strpos($x['input'],'|')!==false) { // select
         $type='select';
         $opts['choices']=explode('|',$x['input']);
         $opts['value'] = empty($x['value']) ? $opts['choices'][0] : $x['value'];
@@ -214,6 +219,7 @@ class Bsform extends Bsdata
       $x['control']=$this->control_str($type,$opts);
   
     }
+    unset($x);
   } /* set_controls */
 
 
@@ -304,6 +310,9 @@ class Bsform extends Bsdata
       $str = "<textarea name='".$opts['name']."' rows='$rows' style='width:100%;'>";
       $str .= isset($value) ? $value : '';
       $str .= "</textarea>\n";
+    } elseif($type=='checkbox')	{
+      $checked = isset($value) && $value==true ? ' checked' : '';
+      $str = "<input type='$type' name='".$opts['name']."'$checked style='width:100%;'>";
     } else {
       if($type=='date' && isset($value))	{
         $sh = new Excelsheet();

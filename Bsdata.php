@@ -334,10 +334,12 @@ class Bsdata extends datatable
     //pre_r($this,'$thisfield');
   
     extract($this->options);
+    //pre_r($this->options);
+    //exit;
   
     $str='';
     $str .= $small==true ? "<small>\n" : "";
-    $str .= "<table id='$id' class='table $cls'>\n";
+    $str .= "\n<table id='$id' class='table $cls'>\n";
 
     $cols = array_keys(reset($this->$field));
 
@@ -348,7 +350,11 @@ class Bsdata extends datatable
     if(!empty($show_column))	{
       $cols = array_intersect($cols,$show_column);
     }
-
+    if(count($cols)>count($align))	{
+      for(	$col=count($cols);	$col<count($align);	$col++)	{
+        $align[]='left';
+      }
+    }
     if($header==true)	{
       $str.= "  <thead>\n";
       $str.= "    <tr>\n";
@@ -383,15 +389,20 @@ class Bsdata extends datatable
       if(true) {
         $i = 0;
         foreach($y as $key => $value) {
-          $style_w = isset($column_width[$i]) && !empty($column_width[$i]) ?
-                   " style='width:".$column_width[$i]."%;'" : "";
+          $style =" style='";
+          $style .= isset($align[$i]) && !empty($align[$i]) ?
+                     "text-align:".$align[$i].";" :
+                     '';
+          $style .= isset($column_width[$i]) && !empty($column_width[$i]) ?
+                   "width:".$column_width[$i]."%;" : "";
+          $style .= "'";
           $td = isset($column_type[$key]) && $column_type[$key]=='label' ?
               "th" : "td";
           $scope = $td=='th' ? " scope='col'" : "";
           $cls=$this->cell_class($row,$key);
           $val = $this->get_cell_empty($row,$key);
           $val = $val===false ? $value :$val;
-          $str.= "      <$td$scope$cls$style_w>$val</$td>\n";
+          $str.= "      <$td$scope$cls$style>$val</$td>\n";
           $i++;
         }
       } else {
@@ -406,7 +417,9 @@ class Bsdata extends datatable
 
 
     $str .= "</table>\n";
-    $str .= "<input type='submit' value='Accept Changes' name='update-table'><br><br>\n";
+    if($accept_button==true)	{
+      $str .= "<input type='submit' value='Accept Changes' name='update-table' class='btn btn-secondary btn-sm'><br><br>\n";
+    }
 
 
     $str .= $small==true ? "</small>\n" : "";
