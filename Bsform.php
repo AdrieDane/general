@@ -31,6 +31,19 @@ class Bsform extends Bsdata
     } else {
       $tbl = new importtable($file,$opts);
     }
+
+    // collect hidden controls (move then outside table)
+    $data=[];
+    $hidden=[];
+    foreach($tbl->data as $k => $x) {
+      if($x['type']=='hidden')	{
+        $hidden[]=$x;
+      } else {
+        $data[]=$x;
+      }
+    }
+    $tbl=new datatable($data);
+    
     //pre_r($tbl,'$tbl');
     //exit;
     $keys=array_keys($tbl->data);
@@ -47,12 +60,33 @@ class Bsform extends Bsdata
 
     parent :: __construct( $tbl->data,$opts);
 
-    $this->set_controls(); 
+    $this->set_controls();
+
+    $this->hidden=$hidden;
     // pre_r(array_column($this->data,'control'),'Control');
     //  pre_r(array_column($this->data,'warning'),'Warning');
   
   }
 
+/*    Title: 	html
+      Purpose:	
+      Created:	Mon Oct 11 08:25:59 2021
+      Author: 	
+*/
+function html($field="_data")
+{
+  $str = parent :: html($field);
+  if(isset($this->hidden) && ! empty($this->hidden))	{
+    foreach($this->hidden as $x) {
+      $str .= "\n<input type='hidden' name='".$x['key']."' value='".$x['value']."'>";
+
+    }
+  }
+  return $str;
+} /* html */
+
+
+  
   /*    Title: 	get_mapping
         Purpose:	return associative array ['key' => 'title']
         Created:	Thu Apr 08 09:23:34 2021
