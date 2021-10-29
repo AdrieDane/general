@@ -35,11 +35,37 @@ class Bsform extends Bsdata
     // collect hidden controls (move then outside table)
     $data=[];
     $hidden=[];
+    $check_present=['unit' => '','error' => '', 'warning' =>'' , 'auto' => '', 'tooltip' =>'', 'control' =>''];
     foreach($tbl->data as $k => $x) {
+      foreach($check_present as $field => $value) {
+        if(!isset($x[$field]))	{
+          $x[$field]=$value;
+        }
+      }
       if($x['type']=='hidden')	{
         $hidden[]=$x;
       } else {
+        if(!isset($x['input']) || empty($x['input']))	{
+          $x['input']=$x['type'];
+        }
         $data[]=$x;
+      }
+    }
+    
+    // move visible columns to the front
+    $cols=$opts['show_column'];
+    if(isset($cols)&& !empty($cols))	{
+      $tmp_data=$data;
+      $data=[];
+      foreach($tmp_data as &$x) {
+        $y=[];
+        foreach($cols as $field) {
+          $y[$field] = $x[$field];
+        }
+        foreach(array_diff(array_keys($x),$cols) as $field) {
+          $y[$field] = $x[$field];
+        }
+        $data[]=$y;
       }
     }
     $tbl=new datatable($data);

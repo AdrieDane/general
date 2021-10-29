@@ -33,7 +33,7 @@ class Blob
     }
     $table = !empty($opts) && in_array('table',array_keys($opts)) ?
       $opts['table'] :
-      'file';
+      'files';
     $query = "SELECT `fileId`,`name`,`type`,`contents`,`size`,`object` FROM $table WHERE `fileId`=$input";
     $result = $con->query($query);
     $this->Id = $result['fileId'];
@@ -84,9 +84,9 @@ function __destruct()
     }
     $table = !empty($opts) && in_array('table',array_keys($opts)) ?
       $opts['table'] :
-      'file';
-    $blob = quickdb::$con->real_escape_string($this->contents);
-    $query  = "INSERT INTO `file`(`name`, `type`, `contents`, `size`, `object`) VALUES (";
+      'files';
+    $blob = $con -> real_escape_string($this->contents);
+    $query  = "INSERT INTO `$table`(`name`, `type`, `contents`, `size`, `object`) VALUES (";
     $query .= "'".$this->name."', ";
     $query .= "'".$this->type."', ";
     $query .= "'".$blob."', ";
@@ -94,7 +94,7 @@ function __destruct()
     $query .= "'".$this->object."')";
     $con->query($query);
     
-    $this->Id=quickdb::$con->insert_id;
+    $this->Id=$con -> insert_id;
 
     return $this->Id;
 } /* to_db */
