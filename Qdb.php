@@ -307,7 +307,7 @@ class Qdb extends mysqli
     // pre_r($keys,'$keys');
     // pre_r($types,'$types');
     foreach($keys as $key) {
-      if(in_array($types[$key],['int','bit','timestamp']))	{
+      if(in_array($types[$key],['int','bit','timestamp','tinyint']))	{
         $prepared .= 'i';
       } elseif($types[$key]=='blob')	{
         $prepared .= 'b';
