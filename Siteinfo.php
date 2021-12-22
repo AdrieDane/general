@@ -34,6 +34,8 @@ class Siteinfo
     $this->host=$_SERVER['HTTP_HOST'];
     $this->port=$_SERVER['SERVER_PORT'];
     $this->request = $start_dash==true ? $_SERVER['REQUEST_URI'] : substr($_SERVER['REQUEST_URI'],1);
+    //pre_r($_SERVER['HTTP_HOST'],'HTTP_HOST');
+    //pre_r($this,'$this');
     //    if($this->host=='localhost')	{
     if(true)	{
       $parts = explode('/',$this->request);
@@ -61,7 +63,12 @@ class Siteinfo
 
     // SET THE PORT ONLY IF IT IS NOT HTTP/HTTPS
     if ($_SERVER['SERVER_PORT']!=80 && $_SERVER['SERVER_PORT']!=443) {
-      $this->domain .= ":" . $_SERVER['SERVER_PORT'];
+      $portext =  ":" . $_SERVER['SERVER_PORT'];
+      $nportext =strlen($portext);
+      if(strlen($this->domain) > $nportext &&
+         strcmp($portext,substr($this->domain, -$nportext)))	{
+           $this->domain .= $portext;
+      }
     }
     $this->site = $this->domain.'/'.$this->base_uri;
     $this->url=$this->site.$this->request;
