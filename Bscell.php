@@ -164,7 +164,7 @@ class Bscell
       $str = "<span data-toggle='tooltip' data-placement='auto' data-html='true' ".
            "title='".$this->tooltip."' style='width:100%;'>".
            $str."</span>";
-    } else {
+    } elseif(!empty($str)) {
       $str = "<span style='width:100%;'>\n".$str."</span>\n";
     }
 

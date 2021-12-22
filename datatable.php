@@ -441,6 +441,7 @@ function unjsonify_fields($options=[])
         $this->$field[]=$x;
       }
     }
+    unset($x);
   }
 
 
@@ -493,6 +494,7 @@ function unjsonify_fields($options=[])
         foreach ($this->$field as &$x) {
           $result[$x[$key]][] = $x;
         }
+        unset($x);
       } else {
         foreach ($this->$field as $x) {
           $result[$x[$key]][] = $x;
@@ -504,6 +506,7 @@ function unjsonify_fields($options=[])
         foreach ($this->$field as &$x) {
           $result[$x[$key[0]]][$x[$key[1]]][] = $x;
         }
+        unset($x);
       } else {
         foreach ($this->$field as $x) {
           $result[$x[$key[0]]][$x[$key[1]]][] = $x;
@@ -515,6 +518,7 @@ function unjsonify_fields($options=[])
         foreach ($this->$field as &$x) {
           $result[$x[$key[0]]][$x[$key[1]]][$x[$key[2]]][] = $x;
         }
+        unset($x);
       } else {
         foreach ($this->$field as $x) {
           $result[$x[$key[0]]][$x[$key[1]]][$x[$key[2]]][] = $x;

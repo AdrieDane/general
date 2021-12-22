@@ -16,6 +16,7 @@ class Bstable extends datatable
   {
     $opts=['small' => true,
            'data_toolbar' => true,
+           'button_toolbar' => [],
            'header' => true,
            'hide_column' => [],
            'show_column' => [],
@@ -48,14 +49,31 @@ class Bstable extends datatable
       foreach($tmp_data as &$x) {
         $y=[];
         foreach($cols as $field) {
-          $y[$field] = $x[$field];
+          $y[$field] = isset($x[$field]) ? $x[$field] : '';
         }
         foreach(array_diff(array_keys($x),$cols) as $field) {
           $y[$field] = $x[$field];
+          //          $y[$field] = $x[$field];
         }
         $data[]=$y;
       }
+      unset($x);
     }
+
+    // make sure all columns are present in each member
+    
+    $tmp_cols = array_map('array_keys',$data);
+    $all_cols=array_values(array_unique(array_merge(...$tmp_cols)));
+    //    pre_r($all_cols,'$cols');
+    foreach($data as &$x) {
+      foreach($all_cols as $field) {
+        if(!isset($x[$field]))	{
+          $x[$field] = '';
+        }
+      }
+    }
+    unset($x);
+    // exit;
     
     parent::__construct($data);
     //    $this->ncols=count($this->data[0]);
@@ -182,6 +200,7 @@ class Bstable extends datatable
       foreach($this->cells as $row => &$cells) {
         $cells[$column]->set_controltype($control_type,array_column($this->data,$column));
       }
+      unset($cells);
     }
   } /* set_inputs */
 
@@ -267,6 +286,7 @@ class Bstable extends datatable
           unset($val['html']);
         }
       }
+      unset($val);
       $html = array_filter($html);
       if(!empty($html))	{
         $str .= "<h2>Data validation results</h2>";
@@ -281,6 +301,8 @@ class Bstable extends datatable
 
     // No create the table
     $str .= $small==true ? "<small>\n" : "";
+
+    $toolbar="";
     if($data_toolbar==true)	{
       $str .= "<div id='toolbar'>";
       if($this->data_only==true)	{
@@ -292,8 +314,15 @@ class Bstable extends datatable
       }
       $str .= "</div>";
       $toolbar=" data-toolbar='#toolbar'";
-    } else {
-      $toolbar="";
+    }
+    // exit(pre_r($button_toolbar,'$button_toolbar',true));
+    if(!empty($button_toolbar))	{
+      $str .= "<div id='button_toolbar'>";
+      foreach($button_toolbar as $button => $action) {
+        $str .= "<a class='btn btn-outline-primary btn-sm' href='$action' role='button'>$button</a>";
+      }
+      $str .= "</div>";
+      $toolbar=" data-toolbar='#button_toolbar'";
     }
 
     $str .= "<table data-toggle='table'$toolbar data-search='true'  id='$id' class='table $cls' 
