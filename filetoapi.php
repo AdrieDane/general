@@ -23,7 +23,7 @@ function filetoapi($file,$endpoint,$api)
   }
   curl_setopt($ch, CURLOPT_POSTFIELDS, file_get_contents($file));
   curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
   $result = curl_exec($ch);
   curl_close($ch);
 
