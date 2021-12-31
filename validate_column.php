@@ -96,7 +96,7 @@ class Columnvalidation
     }
     // pre_r($arr,'corrections_html');
     $id=$this->type.str_replace(' ','_',$this->column);
-    $str =  " (<a href='#$id' data-toggle='collapse' class='$color'><b>details</b></a>)".
+    $str =  " (<a href='#$id' data-bs-toggle='collapse' class='$color'><b>details</b></a>)".
          "<div id='$id' class='collapse'>\n";
 
     return $str."<ul>\n<li>".implode("\n<li>",$arr)."\n</ul>\n</div>\n";
@@ -112,7 +112,7 @@ class Columnvalidation
     $arr=[];
     $color=$this->color;
     $id=$this->type.str_replace(' ','_',$this->column);
-    $str =  " (<a href='#$id' data-toggle='collapse' class='$color'><b>details</b></a>)".
+    $str =  " (<a href='#$id' data-bs-toggle='collapse' class='$color'><b>details</b></a>)".
          "<div id='$id' class='collapse'>\n";
 
   

@@ -227,7 +227,8 @@ class Qdb extends mysqli
     if(!empty($table) && empty($array_keys))	{
       $array_keys=$this->primary_key($table);
     }
-    if(is_array($A) && !empty($array_keys))	{
+    if(is_array($A) && !empty($array_keys) && $key_value==false)	{
+      //      pre_r($array_keys);
       $A=array_combine(array_column($A,$array_keys),$A);
     }
     
@@ -307,13 +308,13 @@ class Qdb extends mysqli
     // pre_r($keys,'$keys');
     // pre_r($types,'$types');
     foreach($keys as $key) {
-      if(in_array($types[$key],['int','bit','timestamp','tinyint']))	{
+      if(in_array($types[$key],['int','bit','timestamp','tinyint','bigint']))	{
         $prepared .= 'i';
       } elseif($types[$key]=='blob')	{
         $prepared .= 'b';
       } elseif(in_array($types[$key],['double','float']))	{
         $prepared .= 'd';
-      } elseif(in_array($types[$key],['varchar','char','longtext','date']))	{
+      } elseif(in_array($types[$key],['varchar','char','longtext','date','text']))	{
         $prepared .= 's';
       } else {
         exit("Qdb type_str unknown type: ".$types[$key]);

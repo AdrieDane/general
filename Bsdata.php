@@ -350,7 +350,7 @@ class Bsdata extends datatable
     if(!empty($show_column))	{
       $cols = array_intersect($cols,$show_column);
     }
-    if(count($cols)>count($align))	{
+    if(isset($align) && count($cols)>count($align))	{
       for(	$col=count($cols);	$col<count($align);	$col++)	{
         $align[]='left';
       }
@@ -417,7 +417,7 @@ class Bsdata extends datatable
 
 
     $str .= "</table>\n";
-    if($accept_button==true)	{
+    if(isset($accept_button) && $accept_button==true)	{
       $str .= "<input type='submit' value='Accept Changes' name='update-table' class='btn btn-secondary btn-sm'><br><br>\n";
     }
 
