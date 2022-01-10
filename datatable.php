@@ -803,13 +803,13 @@ _TABLE;
       $vals=[];
       foreach($x as $col => $value) {
         $vals[] = in_array($col_types[$col],['integer','double','boolean']) ?
-                $value : "'$value'";
+                $value : '"'.$value.'"';
       }
       $insert[] = "(".implode(",",$vals).")";
     }
 
     $str = "INSERT INTO $table ($fields) VALUES ".implode(", ",$insert);
-    pre_r($str,'query');
+    // pre_r($str,'query');
 
     if(!is_null($con))	{
       $con->query($str);
