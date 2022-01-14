@@ -143,11 +143,18 @@ function unjsonify_fields($options=[])
   }
   
   foreach($this->data as &$x) {
-    $unjson=json_decode($x[$json_fields]);
-    foreach($unjson as $key => $value) {
-      $x[$key]=$value;
+    $unjson=[];
+    if(isset($x[$json_fields]) && !empty($x[$json_fields]))	{
+      // pre_r($x[$json_fields],'$json_fields');
+      $unjson=json_decode($x[$json_fields]);
+      // pre_r($unjson);
+      if(!empty($unjson) && (is_array($unjson) || is_object($unjson)))	{
+        foreach($unjson as $key => $value) {
+          $x[$key]=$value;
+        }
+        unset($x[$json_fields]);
+      }
     }
-    unset($x[$json_fields]);
     if($return_data)	{
       $data[]=$unjson;
     }
@@ -831,6 +838,7 @@ _TABLE;
     if(is_null($xlsx))	{
       $xlsx=new Excelsheet();
     }
+
     /*
       if($head==true)	{
       $data=$this->$field;

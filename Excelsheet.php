@@ -104,6 +104,21 @@ function to_download($filename='hello.xlsx')
   exit;
 } /* to_download */
 
+/*    Title: 	save
+      Purpose:	
+      Created:	Thu Jan 13 15:47:17 2022
+      Author: 	
+*/
+function save($filename='hello.xlsx')
+{
+  ob_end_clean();
+  ob_start();
+  $writer = new Xlsx($this->wb);
+  // header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  // header('Content-Disposition: attachment; filename="'. urlencode($filename).'"');
+  $writer->save($filename);
+  // exit;
+} /* save */
 
   public static function timestamp($value) {
     return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($value);
@@ -194,9 +209,18 @@ function column_convert($c,$options=[])
       Created:	Thu Apr 08 12:16:02 2021
       Author: 	Adrie Dane
 */
-function set_data($top_left,$data)
- {
-   if(is_array($data))	{
+  function set_data($top_left,$data)
+  {
+    if(is_string($top_left))	{
+      $parts=explode('!',$top_left);
+      if(count($parts)==2)	{
+        $sheet=$parts[0];
+        $top_left=$parts[1];
+        $this->set_sheet($sheet);
+      }
+   }
+
+    if(is_array($data))	{
      if(is_array($top_left))	{
        $col=$this->column_convert($top_left[1],['base' => 0]);
        $top_left[0]++;

@@ -151,6 +151,9 @@ class Columnvalidation
     case 'unique':
       $str .= "Non unique values present in $column ";
       break;
+    case 'member':
+      $str .= "Non allowed values present in $column ";
+      break;
 
     default :
       return $str;
@@ -422,7 +425,7 @@ trait ValidateColumn
     foreach($kv as $k => $v) {
       $arr[$v][]=$k;
     }
-    $col_validation = new Columnvalidation($this,$column,'member',$arr,['warning' => $warning]);
+    $col_validation = new Columnvalidation($this,$column,'member',$arr,['warning' => 'error']);
     return $col_validation;
   } /* validate_member */
 

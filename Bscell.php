@@ -42,7 +42,7 @@ class Bscell
   
     if($this->type=='select')	{
       $this->choices = isset($choices) && !empty($choices) ?
-                     $choices :
+                     array_unique(array_merge($choices,$column)) :
                      array_unique($column);
 
       if(isset($append))	{
