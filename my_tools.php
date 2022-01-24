@@ -25,6 +25,7 @@ include_once 'Bstable.php';
 include_once 'Bsform.php';
 include_once 'repo.php';
 include_once 'Blob.php';
+include_once 'Rscript.php';
 include_once 'Curlconnect.php';
 include_once 'filetoapi.php';
 ?>
