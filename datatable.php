@@ -784,7 +784,7 @@ _TABLE;
         Created:	Mon May 17 11:35:54 2021
         Author: 	
   */
-  function sql_insert($con=null,$table,$columns=array(),$table_columns=[])
+  function sql_insert($con,$table,$columns=array(),$table_columns=[])
   {
     if(!empty($keys))	{
       $A=$this->columns($keys);

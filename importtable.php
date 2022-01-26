@@ -249,7 +249,7 @@ class importtable extends datatable
       Created:	Sun Apr 11 09:01:42 2021
       Author: 	Adrie Dane
 */
-function db_options($con=null,$table_class)
+function db_options($con,$table_class)
 {
 
   if(is_null($con))	{

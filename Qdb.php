@@ -120,7 +120,7 @@ class Qdb extends mysqli
         Created:	Wed May 19 08:34:09 2021
         Author: 	
   */
-  function prepared($query='',$types,$data=[],$options=[])
+  function prepared($query,$types,$data=[],$options=[])
   {
                         
     if(!is_array($data))	{

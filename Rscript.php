@@ -39,7 +39,7 @@ class Rscript
         Created:	Fri Jan 14 15:40:09 2022
         Author: 	
   */
-  function run($cmd,$args=[],$options)
+  function run($cmd,$args=[],$options=[])
   {
     if(!empty($args))	{
       $cmd .= ' '.explode(' ',$args);
