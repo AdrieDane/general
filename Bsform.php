@@ -14,6 +14,7 @@ class Bsform extends Bsdata
            'column_width' => [30, 70],
            'show_column' => ['title', 'control'],
            'align' => ['left', 'right'],
+           'title_checks' => true,
            //	 'hide_column' => ['key','tooltip','td','value','input',
            //			   'error','warning','auto','type','cell'],
            'form' => true,
@@ -86,7 +87,7 @@ class Bsform extends Bsdata
 
     parent :: __construct( $tbl->data,$opts);
 
-    $this->set_controls();
+    $this->set_controls($opts['title_checks']);
 
     $this->hidden=$hidden;
     // pre_r(array_column($this->data,'control'),'Control');
@@ -245,7 +246,7 @@ function html($field="_data")
         Created:	Sat Apr 03 16:26:46 2021
         Author: 	Adrie Dane
   */
-  function set_controls()
+  function set_controls($title_checks)
   {
     foreach($this->data as &$x) {
       $opts=['width' => '',
@@ -253,7 +254,8 @@ function html($field="_data")
              'default' => '',
              'choices' => '',
              'array' => 1,
-             'pattern' => ''];
+             'pattern' => '',
+             'title_checks' => $title_checks];
 
       $type=$x['input'];
       foreach(['value','error','warning','auto','value','tooltip'] as $field) {
@@ -275,11 +277,18 @@ function html($field="_data")
         $opts['value'] = empty($x['value']) ? $opts['choices'][0] : $x['value'];
       }
       //   pre_r($opts,'opts');
-    
-      $x['control']=$this->control_str($type,$opts);
+      // echo $type;
+      if($type=='checkbox' && $title_checks==true && isset($x['title']))	{
+        $x['title'] = $this->control_str($type,$opts) . $x['title'];
+        
+      }else	{
+        $x['control']=$this->control_str($type,$opts);
+      } 
   
     }
     unset($x);
+    // pre_r($this,'$this'); 
+    // exit;
   } /* set_controls */
 
 
@@ -355,7 +364,7 @@ function html($field="_data")
   
     if($type=='select' && isset($opts['choices']))	{
       //  extract($opts);
-      $str = "<select name='$name'>\n";
+      $str = "<select class='form-select' name='$name'>\n";
       foreach($choices as $choice) {
         if(empty($choice))	{
           continue;
@@ -367,12 +376,13 @@ function html($field="_data")
       }
       $str .= "</select>\n";
     } elseif($type=='textarea')	{
-      $str = "<textarea name='".$opts['name']."' rows='$rows' style='width:100%;'>";
+      $str = "<textarea class='form-control' name='".$opts['name']."' rows='$rows' style='width:100%;'>";
       $str .= isset($value) ? $value : '';
       $str .= "</textarea>\n";
     } elseif($type=='checkbox')	{
       $checked = isset($value) && $value==true ? ' checked' : '';
-      $str = "<input type='$type' name='".$opts['name']."'$checked style='width:100%;'>";
+      //      $str = "<input type='$type' name='".$opts['name']."'$checked style='width:100%;'>";
+      $str = "<input class='form-check-input' type='$type' name='".$opts['name']."'$checked> ";      
     } else {
       if($type=='date' && isset($value))	{
         $sh = new Excelsheet();
@@ -388,7 +398,7 @@ function html($field="_data")
       $str='';
       $width= $array==1 ? 100 : floor(98/$array);
       for(	$i=0;	$i<$array;	$i++)	{
-        $str .= "<input type='$type'";
+        $str .= "<input class='form-control' type='$type'";
         $attributes=array_intersect(['name'],array_keys($opts));
         foreach($attributes as $attr) {
           $str .=  " $attr='".$opts[$attr]."'";
@@ -424,7 +434,9 @@ function html($field="_data")
            "title='$tooltip' style='width:100%;'>\n".
            $str."</span>\n";
     } else {
-      $str = "<span style='width:100%;'>\n".$str."</span>\n";
+      $str = $title_checks==false
+           ? "<span style='width:100%;'>\n".$str."</span>\n"
+           : $str;
     }
 
     return $str.$error.$warning.$auto;
