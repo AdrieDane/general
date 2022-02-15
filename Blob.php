@@ -138,7 +138,11 @@ function as_object($args=[],$obj_str='')
   //pre_r($this,'$blob');
   $dir = sys_get_temp_dir();
   $fname = $dir.'/'.$this->name;
-  
+  /*
+  if(file_exists($fname))	{
+    unlink($fname);
+  } 
+  */
   $obj_str = empty($obj_str) ? $this->object : $obj_str;
   //pre_r($obj_str,'$obj_str');
   if(empty($obj_str))	{

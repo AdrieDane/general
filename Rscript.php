@@ -1,13 +1,39 @@
 <?php
 
+// Does not support flag GLOB_BRACE
+function rglob($pattern, $flags = 0) {
+    $files = glob($pattern, $flags); 
+    foreach (glob(dirname($pattern).'/*', GLOB_ONLYDIR|GLOB_NOSORT) as $dir) {
+        $files = array_merge($files, rglob($dir.'/'.basename($pattern), $flags));
+    }
+    return $files;
+}
 class Rscript
 {
   public function __construct($rscript='')  {
     if(empty($rscript))	{
-      if(PHP_OS=='WINNT')	{
-        $this->rscript='"C:\Program Files\R\R-4.0.5\bin\Rscript.exe" ';
+      if(isset($_SESSION['rscript']) &&
+         !empty($_SESSION['rscript']))	{
+        $this->rscript=$_SESSION['rscript'];
+      } elseif(PHP_OS=='WINNT')	{
+        $startdirs = ['C:/R','C:/Program Files/R'];
+        foreach($startdirs as $startdir) {
+          $result = rglob($startdir. '/Rscript.exe');
+          if(!empty($result))	{
+            break;
+          }
+        }
+        if(!empty($result))	{
+          $this->rscript=$result[0].' ';
+        } else {
+          echo("ERROR: cannot locate Rscript.exe");
+        }
+        
       }else	{
         $this->rscript='/usr/local/R-4.0.1/bin/Rscript ';
+      }
+      if(isset($_SESSION))	{
+        $_SESSION['rscript']=$this->rscript;
       }
     }else	{
       $this->rscript=$rscript;
