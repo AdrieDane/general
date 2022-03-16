@@ -249,6 +249,7 @@ function html($field="_data")
   function set_controls($title_checks)
   {
     foreach($this->data as &$x) {
+      // pre_r($x,'$x');
       $opts=['width' => '',
              'rows' => '',
              'default' => '',
@@ -263,6 +264,7 @@ function html($field="_data")
       }
       $opts['name']=$x['key'];
 
+      // Special cases
       if(is_numeric($x['input'])) { // textarea
         $type='textarea';
         $opts['rows']=$x['input'];
@@ -278,6 +280,11 @@ function html($field="_data")
       }
       //   pre_r($opts,'opts');
       // echo $type;
+
+      // Create controls
+      if($type=='section')	{ // no control and no input make bold title
+        $x['title'] = "<b>". $x['title']."</b>";
+      }
       if($type=='checkbox' && $title_checks==true && isset($x['title']))	{
         $x['title'] = $this->control_str($type,$opts) . $x['title'];
         
