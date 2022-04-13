@@ -685,6 +685,34 @@ _TABLE;
     return $table;
   }
 
+  /*    Title: 	text
+        Purpose:	
+        Created:	Tue Apr  5 14:38:18 2022
+        Author: 	
+  */
+  function text($options=[])
+  {
+    $opts = useroptions(['sep' => "\t",
+                         'field' => "data",
+                         'head' => '',
+                         'Qexc' => false],$options);
+    extract($opts);
+    
+    if(!empty($head))	{
+      $data = is_array($head)
+            ? $head
+            : array($head);
+      array_push($data,implode($sep,array_keys(reset($this->$field))));
+    } else	{
+      $data=array(implode($sep,array_keys(reset($this->$field))));  
+    }
+    
+    foreach($this->$field as $row) {
+      array_push($data,implode($sep,array_values($row)));
+    }
+
+    return implode("\n",$data);
+  } /* text */
 
 
 
