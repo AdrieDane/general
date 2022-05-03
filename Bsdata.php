@@ -24,7 +24,7 @@ class Bsdata extends datatable
     foreach($options as $key => $value) {
       $opts[$key]=$value;
     }
-    
+    //pre_r($data,'$data*');
     parent::__construct($data);
 
     $this->validation=[];

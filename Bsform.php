@@ -71,12 +71,13 @@ class Bsform extends Bsdata
     }
     $tbl=new datatable($data);
     
-    //pre_r($tbl,'$tbl');
+    // pre_r($tbl,'$tbl');
     //exit;
     $keys=array_keys($tbl->data);
     $keys=array_combine($keys,$keys);
     foreach($tbl->data as $k => &$x) {
-      if(empty($x['key']))	{
+      // if type is radio: don't change key!! Does this fix always work? It seems so!!
+      if(empty($x['key']) || $x['type']=='radio')	{
         $x['td'] = 'th';
       } else {
         $x['td'] = 'td';
@@ -85,7 +86,11 @@ class Bsform extends Bsdata
     }
     $tbl->data=array_combine($keys,$tbl->data);
 
+    // pre_r($keys,'$keys');
+    // pre_r($opts,'$opts');
+
     parent :: __construct( $tbl->data,$opts);
+    // pre_r($this,'$this');
 
     $this->set_controls($opts['title_checks']);
 
@@ -95,22 +100,68 @@ class Bsform extends Bsdata
   
   }
 
-/*    Title: 	html
-      Purpose:	
-      Created:	Mon Oct 11 08:25:59 2021
-      Author: 	
-*/
-function html($field="_data")
-{
-  $str = parent :: html($field);
-  if(isset($this->hidden) && ! empty($this->hidden))	{
-    foreach($this->hidden as $x) {
-      $str .= "\n<input type='hidden' name='".$x['key']."' value='".$x['value']."'>";
+  /*    Title: 	checkbox
+        Purpose:	returns element
+        Created:	Mon May  2 14:51:30 2022
+        Author: 	
+  */
+  public static function checkbox($key,$title,$options=[])
+  {
+    return useroptions(['title' => $title, 'value' => 0,
+                        'type' => 'checkbox', 'tooltip' => '',
+                        'pattern' => '','control' => '',
+                        'unit' => '','error' => '', 'warning' =>'' ,
+                        'auto' => '','key' => $key,
+                        'name' => ''],$options);
+  } /* checkbox */
 
+  /*    Title: 	radio
+        Purpose:	returns element
+        Created:	Mon May  2 14:51:30 2022
+        Author: 	
+  */
+  public static function radio($key,$title,$options=[])
+  {
+    return useroptions(['title' => $title, 'value' => 0,
+                        'type' => 'radio', 'tooltip' => '',
+                        'pattern' => '','control' => '',
+                        'unit' => '','error' => '', 'warning' =>'' ,
+                        'auto' => '','key' => $key,
+                        'name' => ''],$options);
+  } /* radio */
+  
+  /*    Title: 	submit
+        Purpose:	returns element
+        Created:	Mon May  2 14:51:30 2022
+        Author: 	
+  */
+  public static function submit($key,$title,$options=[])
+  {
+    return useroptions(['title' => '', 'value' => $title,
+                        'type' => 'submit', 'tooltip' => '',
+                        'pattern' => '','control' => '',
+                        'unit' => '','error' => '', 'warning' =>'' ,
+                        'auto' => '','key' => $key,
+                        'name' => ''],$options);
+  } /* submit */
+
+  
+  /*    Title: 	html
+        Purpose:	
+        Created:	Mon Oct 11 08:25:59 2021
+        Author: 	
+  */
+  function html($field="_data")
+  {
+    $str = parent :: html($field);
+    if(isset($this->hidden) && ! empty($this->hidden))	{
+      foreach($this->hidden as $x) {
+        $str .= "\n<input type='hidden' name='".$x['key']."' value='".$x['value']."'>";
+
+      }
     }
-  }
-  return $str;
-} /* html */
+    return $str;
+  } /* html */
 
 
   
@@ -285,7 +336,10 @@ function html($field="_data")
       if($type=='section')	{ // no control and no input make bold title
         $x['title'] = "<b>". $x['title']."</b>";
       }
-      if($type=='checkbox' && $title_checks==true && isset($x['title']))	{
+      if($type=='radio')	{
+        $opts['title']=$x['title'];
+      }
+      if(($type=='checkbox' || $type=='radio' || $type=='submit') && $title_checks==true && isset($x['title']))	{
         $x['title'] = $this->control_str($type,$opts) . $x['title'];
         
       }else	{
@@ -390,6 +444,15 @@ function html($field="_data")
       $checked = isset($value) && $value==true ? ' checked' : '';
       //      $str = "<input type='$type' name='".$opts['name']."'$checked style='width:100%;'>";
       $str = "<input class='form-check-input' type='$type' name='".$opts['name']."'$checked> ";      
+    } elseif($type=='radio')	{
+      $checked = isset($value) && $value==true ? ' checked' : '';
+      //      $str = "<input type='$type' name='".$opts['name']."'$checked style='width:100%;'>";
+      $str = "<input class='form-check-input' type='$type' name='".$opts['name'].
+           "' value='".$opts['title']."'$checked> ";          
+    } elseif($type=='submit')	{
+      //      $str = "<input type='$type' name='".$opts['name']."'$checked style='width:100%;'>";
+      $str = "<input class='btn btn-primary' type='$type' name='".$opts['name'].
+           "' value='".$opts['value']."'> ";      
     } else {
       if($type=='date' && isset($value))	{
         $sh = new Excelsheet();
