@@ -41,6 +41,11 @@ class Bstable extends datatable
       $cols = array_intersect($this->options['show_column'],$cols);
     }
     $this->options['visible']=$cols;
+    if(!is_array($this->options['data_sortable']))	{
+      $this->options['data_sortable'] = $this->options['data_sortable']==true
+                                      ? array_fill(0, count($cols), true)
+                                      : [];
+    }
 
     // move visible columns to the front
     if(isset($cols)&& !empty($cols))	{
