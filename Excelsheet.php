@@ -219,6 +219,7 @@ public static function column_convert($c,$options=[])
     $A -= 1;
     $pow=0;
     $num=0;
+    //pre_r($c,'$c');
     $chars=array_reverse(str_split(strtoupper($c)));
     foreach($chars as $char) {
       $num += (ord($char)-$A)*pow(26,$pow);
@@ -241,13 +242,15 @@ public static function column_convert($c,$options=[])
           'col' => [],
           'row' => []];
     
-    $parts=explode('!',$top_left);
+    $parts=explode('!',$range);
     if(count($parts)==2)	{
       $arr['sheet']=$parts[0];
       $range=$parts[1];
     }
     preg_match_all('/[A-Z]+/i', $range, $col);
+    $col=$col[0];
     preg_match_all('/\d+/', $range, $row);
+    $row=$row[0];
     foreach($col as &$x) {
       $x=self::column_convert($x);
     }

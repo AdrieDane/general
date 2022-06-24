@@ -91,8 +91,12 @@ class Excelcom
       $arr=Excelsheet::range_to_parts($top_left);
       $row=$arr['row'];
       $col=$arr['col'];
+    }  elseif(is_array($top_left) && count($top_left)>=2)	{
+      $row=$top_left[0];
+      $col=$top_left[1];
     }
     $this->sheet->Cells($row,$col)->Value=$data;
+    $this->sheet->Cells($row,$col)->Activate;
   } /* set_data */
 
   /*    Title: 	get_data
