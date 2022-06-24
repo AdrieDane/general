@@ -11,6 +11,7 @@ include_once 'Optionsarray.php';
 require_once 'HTML_snippets.php';
 include_once 'Dateconvert.php';
 include_once 'Excelsheet.php';
+include_once 'Excelcom.php';
 include_once 'quickdb.php';
 include_once 'Qdb.php';
 include_once 'form_tools.php';

@@ -157,12 +157,38 @@ function form_dateconvert($value)
   }
 } /* form_dateconvert */
 
+/*    Title: 	crop_empty
+      Purpose:	remove empty rows and columns from the end
+      Created:	Thu Jun 23 11:56:05 2022
+      Author: 	
+*/
+public static function crop_empty($data)
+{
+  
+  // remove empty rows and columns from the end
+  $row=count($data)-1;
+  while(!array_filter($data[$row]))	{
+    unset($data[$row]);
+    $row--;
+  }
+  $col=count($data[0])-1;
+  while(!array_filter(array_column($data,$col)))	{
+    foreach($data as &$x) {
+      unset($x[$col]);
+    }
+    $col--;
+  }
+  return $data;
+} /* crop_empty */
+
+
+  
 /*    Title: 	column_convert
  Purpose:	converts between column number and column letter
  Created:	Fri Apr 02 11:15:58 2021
  Author: 	Adrie Dane
 */
-function column_convert($c,$options=[])
+public static function column_convert($c,$options=[])
 {
   $opts=['uppercase' => true,
 	 'base' => 1];
@@ -204,6 +230,39 @@ function column_convert($c,$options=[])
 
 } /* column_convert */
 
+  /*    Title: 	range_to_parts
+        Purpose:	
+        Created:	Thu Jun 23 17:34:16 2022
+        Author: 	
+  */
+  public static function range_to_parts($range)
+  {
+    $arr=['sheet' => '',
+          'col' => [],
+          'row' => []];
+    
+    $parts=explode('!',$top_left);
+    if(count($parts)==2)	{
+      $arr['sheet']=$parts[0];
+      $range=$parts[1];
+    }
+    preg_match_all('/[A-Z]+/i', $range, $col);
+    preg_match_all('/\d+/', $range, $row);
+    foreach($col as &$x) {
+      $x=self::column_convert($x);
+    }
+    $arr['col'] = count($col)==1 || $col[0]==$col[1]
+                ? $col[0]
+                : $col;
+    $arr['row'] = count($row)==1 || $row[0]==$row[1]
+                ? $row[0]
+                : $row;
+
+    return $arr;
+  } /* range_to_parts */
+
+
+  
 /*    Title: 	set_data
       Purpose:	
       Created:	Thu Apr 08 12:16:02 2021
@@ -222,7 +281,7 @@ function column_convert($c,$options=[])
 
     if(is_array($data))	{
      if(is_array($top_left))	{
-       $col=$this->column_convert($top_left[1],['base' => 0]);
+       $col=self::column_convert($top_left[1],['base' => 0]);
        $top_left[0]++;
        $top_left=$col.$top_left[0];
      }
@@ -327,20 +386,7 @@ function data($options=[])
       $opts[$key]=$options[$key];
     }
   }
-
-  // remove empty rows and columns from the end
-  $row=count($data)-1;
-  while(!array_filter($data[$row]))	{
-    unset($data[$row]);
-    $row--;
-  }
-  $col=count($data[0])-1;
-  while(!array_filter(array_column($data,$col)))	{
-    foreach($data as &$x) {
-      unset($x[$col]);
-    }
-    $col--;
-  }
+  $data=self::crop_empty($data);
   $this->reader->setReadDataOnly(FALSE);
 
   return $data;
