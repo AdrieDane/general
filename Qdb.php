@@ -382,7 +382,7 @@ class Qdb extends mysqli
     }
 
     catch (exception $e) {
-      echo "Exception: No primary key for table: ".$table;
+      // echo "Exception: No primary key for table: ".$table;
       return '';
     }
     return $result['Column_name'];
