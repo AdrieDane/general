@@ -498,8 +498,8 @@ class Qdb extends mysqli
              'ambiguous' => [], 
              'log' => 'Update Table: ' . $table . '<ul>',
              'split' => $split];
-    $retval['log'] .= '<li>Checked: '.$nchecks.' records';
-    $retval['log'] .= '<li>Checked: '.count($Xdb).' records';
+    //   $retval['log'] .= '<li>Checked: '.$nchecks.' records';
+    //    $retval['log'] .= '<li>Checked: '.count($Xdb).' records';
     if(isset($absent) && !empty($absent))	{
       $retval['log'] .= '<li>Insertions: '.count($absent).' records';
       $Ainsert=new datatable($absent);
