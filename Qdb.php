@@ -375,6 +375,15 @@ class Qdb extends mysqli
   function primary_key($table)
   {
     $result=$this->query("SHOW KEYS FROM $table WHERE Key_name = 'PRIMARY'");
+    try {
+      if(!isset($result['Column_name']))	{
+        throw new Exception(); 
+      }
+    }
+
+    catch (exception $e) {
+      echo "Exception: No primary key for table: ".$table;
+    }
     return $result['Column_name'];
   } /* primary_key */
 
