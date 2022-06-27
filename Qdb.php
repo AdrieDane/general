@@ -499,6 +499,7 @@ class Qdb extends mysqli
              'log' => 'Update Table: ' . $table . '<ul>',
              'split' => $split];
     $retval['log'] .= '<li>Checked: '.$nchecks.' records';
+    $retval['log'] .= '<li>Checked: '.count($Xdb->data).' records';
     if(isset($absent) && !empty($absent))	{
       $retval['log'] .= '<li>Insertions: '.count($absent).' records';
       $Ainsert=new datatable($absent);
@@ -511,14 +512,6 @@ class Qdb extends mysqli
       //      $retval['log'] .= '<li>Checks and/or Updates: '.count($present).' records';
       $keys=array_diff($keys,$where);
       foreach($keys as $column) {
-        
-        /* debugging only
-        if($table=='samples' && !in_array($column,['groupId','sample_name','matrix']))	{ //just return whatever update_column returns
-          return ['updates' => 'ha ha'.$column,
-                  'Xdb' => $Xdb,
-                  'present' => $present];
-                  }
-        */
         // this returns prim key of updates
         $column_updated = $this->update_column($table,$present,
                                                $column,['Xdb' => $Xdb]);
