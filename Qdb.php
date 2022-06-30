@@ -498,6 +498,7 @@ class Qdb extends mysqli
              'ambiguous' => [], 
              'log' => 'Update Table: ' . $table . '<ul>',
              'split' => $split];
+    // REMOVED BECAUSE NUMBERS DON'T ADD UP (unknown reason)
     //   $retval['log'] .= '<li>Checked: '.$nchecks.' records';
     //    $retval['log'] .= '<li>Checked: '.count($Xdb).' records';
     if(isset($absent) && !empty($absent))	{

@@ -28,7 +28,8 @@ class Bstable extends datatable
            'cls' => 'table-sm table-hover',
            'column_width' => [],
            'validate' => [],
-           'controls' => []];
+           'controls' => [],
+           'data_only' =>true];
 
     $this->options=useroptions($opts,$options);
 
@@ -100,7 +101,8 @@ class Bstable extends datatable
     }
     // init validation
     $this->validate_all();
-    $this->data_only=false;
+    $this->data_only=$this->options['data_only'];
+    // $this->data_only=false;
     $this->set_column_options();
   }
 

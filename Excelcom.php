@@ -8,12 +8,17 @@ class Excelcom
 
     $opts = useroptions(['runmacros' => false,
                          'visible' => false,
-                         'sheet' => 1],$options);
+                         'sheet' => 1,
+                         'verbose' => false],$options);
     $this->file=$file;
+
+    $this->verbose=$opts['verbose'];
 
     //starting excel
     $this->excel = new COM("excel.application") or die("Unable to instanciate excel");
-    print "Loaded excel, version {$this->excel->Version}\n";
+    if($this->verbose==true)	{
+      print "Loaded excel, version {$this->excel->Version}<br>\n";
+    }
 
     //bring it to front
     $this->excel->Visible = $opts['visible']==true ? 1 : 0;//NOT
@@ -31,8 +36,17 @@ class Excelcom
 
     //create a new workbook
     $this->book = $this->excel->Workbooks->Open(str_replace('/','\\',$file));
+    if($this->verbose==true)	{
+      print "Opened: {$this->file}<br>\n";
+    }
 
     $this->readonly = $this->book->ReadOnly;
+    /*
+      if($this->readonly==true)	{
+      $obj=new COM(Scripting.FileSystemObject);
+      pre_r($obj,'$obj');
+      }
+    */
     
     if($opts['runmacros']==false)	{
       // return to normal security setting
@@ -69,15 +83,17 @@ class Excelcom
                       $options);
     if(!is_numeric($sheet))	{
       $sheets=array_flip($this->sheets);
-      $sheet=$sheet[$sheet];
+      $sheet=$sheets[$sheet];
     }
-    $sh = $this->book->Worksheets($sheet);
+    $this->sheet = $this->book->Worksheets($sheet);
     if($opts['activate']==true)	{
       //select the default sheet
-      $this->sheet=$sh;
       $this->sheet->activate;
     }
-    return $sh;    
+    if($this->verbose==true)	{
+      print "Activated sheet: {$this->sheet->Name}<br>\n";
+    }
+    return $this->sheet;
   } /* set_sheet */
   
   /*    Title: 	set_data
@@ -94,6 +110,9 @@ class Excelcom
     }  elseif(is_array($top_left) && count($top_left)>=2)	{
       $row=$top_left[0];
       $col=$top_left[1];
+    }
+    if(!isset($this->sheet))	{
+      $this->set_sheet();
     }
     $this->sheet->Cells($row,$col)->Value=$data;
     $this->sheet->Cells($row,$col)->Activate;
@@ -169,17 +188,20 @@ class Excelcom
   */
   function close()
   {
+    if(is_null($this->excel))	{
+      return;
+    }
     $this->book->Save();
 
     //close the book
     $this->book->Close(false);
     $this->excel->Workbooks->Close();
 
-    //free up the RAM
-    unset($this->sheet);
-
     //closing excel
     $this->excel->Quit();
+    
+    //free up the RAM
+    unset($this->sheet);
 
     //free the object
     $this->excel = null;

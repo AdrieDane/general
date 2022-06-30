@@ -437,6 +437,9 @@ class Bsform extends Bsdata
       }
       $str .= "</select>\n";
     } elseif($type=='textarea')	{
+      if(!isset($rows))	{
+        $rows=1;
+      }
       $str = "<textarea class='form-control' name='".$opts['name']."' rows='$rows' style='width:100%;'>";
       $str .= isset($value) ? $value : '';
       $str .= "</textarea>\n";
@@ -472,7 +475,7 @@ class Bsform extends Bsdata
         $attributes=array_intersect(['name'],array_keys($opts));
         foreach($attributes as $attr) {
           $str .=  " $attr='".$opts[$attr]."'";
-          unset($opts[$attr]);
+          // unset($opts[$attr]);
         }
         if(isset($value))	{
           if(is_array($value))	{
