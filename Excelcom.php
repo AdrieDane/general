@@ -123,7 +123,7 @@ class Excelcom
         Created:	Thu Jun 23 12:32:17 2022
         Author: 	
   */
-  function get_data($range,$options=[])
+  function get_data($range=[],$options=[])
   {
     $opts=useroptions(['crop_empty'=>true,
                        'min_dimensions' => false,
@@ -135,7 +135,7 @@ class Excelcom
         : $this->set_sheet($opts['sheet'],
                            ['activate' => false]);
 
-    $rng=$sh->Range($range);
+    $rng = empty($range) ? $sh->UsedRange : $sh->Range($range);
 
     $nrow=$rng->Rows->Count;
     $ncol=$rng->Columns->Count;

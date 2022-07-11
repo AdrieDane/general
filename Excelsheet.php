@@ -379,7 +379,7 @@ function data($options=[])
   }
   $this->reader->setReadDataOnly(TRUE);
   $data = $this->sheet->toArray();
-
+  //  pre_r($data,'Excelsheet:$data');
   $opts=['remove_empty'=>true]; // strip empty rows and columns from the end
   
   // get user options

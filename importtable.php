@@ -64,15 +64,18 @@ class importtable extends datatable
            'sql' => false];
 
     $opts=$this->useroptions($opts,$user_options);
-
+    pre_r($opts,'$opts');
     $file = $this->set_file_info($file,$opts);
 
-    $db_opts = $this->db_options($con,$opts['table_class']);
-    //    exit('test0');
-    //    pre_r($opts,'$opts');
+    if(isset($opts['table_class']) && !empty($opts['table_class']))	{
+      $db_opts = $this->db_options($con,$opts['table_class']);
+      //    exit('test0');
+      //    pre_r($opts,'$opts');
 
 
-    $opts=$this->useroptions($opts,$db_opts);
+      $opts=$this->useroptions($opts,$db_opts);
+
+    }
     //    pre_r($opts,'$opts**');
 
     /*    echo "statics<br>";
@@ -86,7 +89,7 @@ class importtable extends datatable
 
 
     extract($opts);
-    //    pre_r($opts);
+    pre_r($opts,'$opts');
     
     $this->date=$this->file_info['date'];
 
@@ -101,6 +104,12 @@ class importtable extends datatable
       if(empty($opts['sheet']))	{
         $opts['sheet']=$excelsheet->name();
       }
+    } elseif($opts['file_type']=='com')	{
+      echo 'com import...';
+      $excel = new Excelcom($file,['visible' => true,
+                                   'sheet' => $opts['sheet']]);
+      $importtable=$excel->get_data();
+      $excel->close();
     } else {
       $delim=$opts['delim'];
       if(empty($delim) | is_null($delim))	{
@@ -178,10 +187,17 @@ class importtable extends datatable
       $err_msg .= " not present.<br><br>Please correct<br>Make sure spelling and case are correct";
       exit($err_msg);
     }
-    
-    
+
     // rename headers
-    if(isset(static :: $rename))	{
+    //this overrules any static renames
+    if(isset($opts['rename']) && !empty($opts['rename']))	{
+      foreach($importtable[0] as &$head) {
+        if(array_key_exists($head,$opts['rename']))	{
+          $head=$opts['rename'][$head];
+        }
+      }
+      unset($head);
+    } elseif(isset(static :: $rename))	{
       foreach($importtable[0] as &$head) {
         if(array_key_exists($head,static :: $rename))	{
           $head=static :: $rename[$head];
@@ -197,6 +213,7 @@ class importtable extends datatable
       $numcol=array();
     }
     
+    // this adds optinal numerical columns to static numerical column array
     if(isset($numeric))	{
       foreach($importtable[0] as &$head) {
         foreach($numeric as $field) {
@@ -208,18 +225,23 @@ class importtable extends datatable
       unset($head);
     }
 
-
     // this turns the importtable with numerical indices into an associative array
     array_walk($importtable, function(&$a) use ($importtable) {
       $a = array_combine($importtable[0], $a);
     });
     array_shift($importtable); # remove column header;
 
+    // pre_r(in_array('infile_order',array_keys($rename)),'$datecol');
+    
     // walking through the complete 2 dimensional array
     $i=1;
     foreach($importtable as &$x) {
       if($opts['infile_order']==TRUE)	{
-        $x['infile_order']=$i++;
+        $infile_order = in_array('infile_order',array_keys($rename))
+                      ? $rename['infile_order']
+                      : 'infile_order';
+                      
+        $x[$infile_order]=$i++;
       }
       foreach($numcol as $field) {
         if(isset($x[$field]))	{
@@ -228,6 +250,7 @@ class importtable extends datatable
       }
       // date columns
       foreach($datecol as $field) {
+        //          pre_r($x,$field);
         if(isset($x[$field]) && is_numeric($x[$field]) && $x[$field]>0)	{
           $x[$field]=date('Y-m-d',Excelsheet::timestamp($x[$field]));
         } elseif($opts['sql']==true) {
@@ -311,7 +334,7 @@ function db_options($con,$table_class)
 */
  function set_file_info($file,&$opts)
 {
-    //    pre_r($file,'$file');
+        pre_r($file,'$file');
     if(is_array($file))	{
       // file was an upload
       $file_info=pathinfo($file['name']);
