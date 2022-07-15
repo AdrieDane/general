@@ -64,7 +64,7 @@ class importtable extends datatable
            'sql' => false];
 
     $opts=$this->useroptions($opts,$user_options);
-    pre_r($opts,'$opts');
+    // pre_r($opts,'$opts');
     $file = $this->set_file_info($file,$opts);
 
     if(isset($opts['table_class']) && !empty($opts['table_class']))	{
@@ -89,7 +89,7 @@ class importtable extends datatable
 
 
     extract($opts);
-    pre_r($opts,'$opts');
+    // pre_r($opts,'$opts');
     
     $this->date=$this->file_info['date'];
 
@@ -334,7 +334,7 @@ function db_options($con,$table_class)
 */
  function set_file_info($file,&$opts)
 {
-        pre_r($file,'$file');
+  //    pre_r($file,'$file');
     if(is_array($file))	{
       // file was an upload
       $file_info=pathinfo($file['name']);
