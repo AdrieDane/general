@@ -690,6 +690,44 @@ class Qdb extends mysqli
 
     return $this->insert_id;
   } /* insert */
-  
+
+  /*    Title: 	source
+        Purpose:	run sql commands from a file
+        Created:	Thu Jul 21 16:00:36 2022
+        Author: 	
+  */
+  function source($file)
+  {
+    // Temporary variable, used to store current query
+    $sql = '';
+    // Read in entire file
+    $lines=file($file);
+    if(self::$verbose==true)	{
+      echo "<b>Running SQL queries from: '$file'</b><br>\n";
+    }
+    
+    // Loop through each line
+    foreach ($lines as $line)
+    {
+      // Skip it if it's a comment
+      if (substr($line, 0, 2) == '--' || $line == '')
+        continue;
+
+      // Add this line to the current segment
+      $sql .= $line;
+      // If it has a semicolon at the end, it's the end of the query
+      if (substr(trim($line), -1, 1) == ';')
+      {
+        // Perform the query
+        $this->query($sql) or print('Error performing query \'<strong>' . $sql . '\': <br /><br />');
+        // Reset temp variable to empty
+        $sql = '';
+      }
+    }
+    if(self::$verbose==true)	{
+      echo "<b>Queries from: '$file' ran successfully</b><br>\n";
+    }
+  } /* source */
+
 } /* Qdb */
 ?>
