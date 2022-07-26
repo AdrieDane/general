@@ -43,7 +43,8 @@ class Siteinfo
 
       $idx = array_search($sub_site,$parts);
       if($idx === false)	{
-        exit('ERROR Siteinfo() sub_site: $sub_site is not part of request: ' .
+        pre_r($parts,'$parts');
+        exit("ERROR Siteinfo() sub_site: $sub_site is not part of request: " .
              $this->request);
       }
 

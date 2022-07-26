@@ -47,5 +47,29 @@ function randomPassword($length=16,$npasswords=1, $characters='lower_case,upper_
   }
 }
  
+/*    Title: 	pre_r
+      Purpose:	print_r between <pre> and </pre> tags
+      Created:	Fri Nov 13 11:04:15 2020
+      Author: 	Adrie Dane
+*/
+function pre_r($data,$ttl='',$as_string=FALSE)
+{
+  /*  if(!isset($ttl) || empty($ttl))	{
+    $f = new ReflectionFunction('pre_r');
+    $pars=$f->getParameters();
+    $ttl=$pars[0];
+    }*/
+  // echo '<br>ttl: '.$ttl;
+  $str = $ttl=='' 
+    ? "<pre>\n".print_r($data,TRUE)."\n</pre>" 
+    : "<pre>\n$ttl: ".print_r($data,TRUE)."\n</pre>";
+  if($as_string==FALSE)	{
+    echo $str;
+  } else {
+    return $str;
+  }
+} /* pre_r */
+
+
 
 ?>
