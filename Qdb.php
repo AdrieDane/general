@@ -1,4 +1,27 @@
 <?php
+
+/* activate reporting */
+$driver = new mysqli_driver();
+$driver->report_mode = MYSQLI_REPORT_STRICT;
+/*
+class QdbException extends Exception {
+  public function errorMessage() {
+    $trace = $this->getTrace();
+    $str = "Trace: <br>\n";
+    foreach($trace as $x) {
+      $str .= $x['file'].'('.$x['line'].')';
+      $str .= isset($x['class']) && !empty($x['class'])
+           ? $x['class'].$x['type'].$x['function'].'()<br>'
+           : $x['function'].'()<br>';
+    }
+    //error message
+    $errorMsg = 'Error on line '.$this->getLine().' in '.$this->getFile()
+    .': <b>'.$this->getMessage().'</b> is not a valid E-Mail address';
+    return $errorMsg;
+  }
+}
+*/
+
 /*
   numerics
   -------------16,1,1,2,9,3,8,8,4,5,246,246,246,
@@ -244,21 +267,28 @@ class Qdb extends mysqli
     return $A;
   } /* format_result */
 
-  
   function query($query='',$options=[])
   {
     if(self::$verbose==true)	{
       echo nl2br("<b>Running Query:</b>\n$query\n",false);
     }
 
-    $result = parent :: query($query);
-    
-    if (!$result) die ("Database access failed:<br>\n" . 
-                       $this->error . 
-                       nl2br("\nQuery:\n<code>$query</code>"));
-
+    try {
+      $result = parent :: query($query);
+      if(!$result)	{
+        throw new mysqli_sql_exception();
+      }
+    } catch(mysqli_sql_exception $e) {
+      $opts = useroptions(['empty_on_error' => false],$options);
+      if($opts['empty_on_error']==true)	{
+        return [];
+      }
+      echo error_message($e,nl2br("\nQuery:\n<code>$query</code>\n"));
+      die();
+    }
     $result = $this->format_result($result,$options);
 
+    
     return $result;
   }
 
