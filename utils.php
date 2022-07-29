@@ -71,5 +71,29 @@ function pre_r($data,$ttl='',$as_string=FALSE)
 } /* pre_r */
 
 
+  /*    Title: 	error_message
+        Purpose:	creates formatted error message for exception
+        Created:	Tue Jul 26 14:30:09 2022
+        Author: 	
+  */
+function error_message($e,$append='')
+  {
+    $trace = $e->getTrace();
+    $str = "Trace: <br>\n";
+    foreach($trace as $x) {
+      $str .= $x['file'].'('.$x['line'].')  <code>     ';
+      $parts = ['class','type','function'];
+      foreach($parts as $part) {
+        $str .= isset($x[$part]) && !empty($x[$part])
+             ? $x[$part] : '';
+      }
+      $str .= isset($x['function']) && !empty($x['function']) ? '()' : '';
+      $str .= "</code><br>";
+    }
+    //error message
+    $errorMsg = 'Error on line '.$e->getLine().' in '.$e->getFile()
+              .': <b>'.$e->getMessage()."</b><br>".$str.$append;
+    return $errorMsg;
+  }
 
 ?>
