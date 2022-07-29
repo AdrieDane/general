@@ -43,8 +43,8 @@ class Excelsheet
       /**  Create a new Reader of the type defined in $inputFileType  **/
       $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader($inputFileType);
       if($opts['dataonly']==true)	{
-	/**  Advise the Reader that we only want to load cell data  **/
-	$reader->setReadDataOnly($opts['dataonly']);
+        /**  Advise the Reader that we only want to load cell data  **/
+        $reader->setReadDataOnly($opts['dataonly']);
       }
       /**  Load $file to a Spreadsheet Object  **/
       $this->wb = $reader->load($file);
