@@ -8,6 +8,11 @@ class Curlconnect
   */
   function __construct($api,$options=[])
   {
+    static $verbose = false;
+    static $json_decode = true;
+    static $keep_json = false;
+    static $serialize = false;
+    
     $opts = useroptions(['cookie' => '',
                          'json_decode' => true,
                          'keep_json' => false,
@@ -21,17 +26,17 @@ class Curlconnect
       //      $this->cookie_file=sys_get_temp_dir().'/'.$opts['cookie'];
       $this->cookie_file=tempnam(sys_get_temp_dir(), 'cfm_');
     }
-    $this->decode=false;
+    //    self::$json_decode=false;
     if(isset($opts['json_decode']) && $opts['json_decode']==true)	{
-      $this->decode=true;
+      self::$json_decode=true;
     }
     
     if($opts['keep_json'] && $opts['keep_json']==true)	{
-      $this->keep_json=true;
+      self::$keep_json=true;
     }
     
     if($opts['serialize'] && $opts['serialize']==true)	{
-      $this->serialize=true;
+      self::$serialize=true;
     }
     
     $this->data_field='data';
@@ -83,7 +88,7 @@ class Curlconnect
 
     // (C) CURL FETCH
     $this->json = curl_exec($ch);
-    if(isset($this->serialize) && $this->serialize==true)	{
+    if(self::$serialize==true)	{
       $this->json = unserialize(base64_decode($this->json));
     }
     if (curl_errno($ch)) {
@@ -92,9 +97,9 @@ class Curlconnect
     } else {
       // (C2) CURL FETCH OK
       // echo $this->json;
-      $this->result = $this->decode==true ?
+      $this->result = self::$json_decode==true ?
                     json_decode($this->json,true) : $this->json;
-      if(!isset($this->keep_json))	{
+      if(self::$keep_json==false)	{
         unset($this->json);
       }
       if(isset($this->info))	{
