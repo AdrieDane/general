@@ -1,6 +1,11 @@
 <?php
 class Curlconnect
 {
+  static $verbose = false;
+  static $json_decode = true;
+  static $keep_json = false;
+  static $serialize = false;
+
   /*    Title: 	__construct
         Purpose:	
         Created:	Sat Jun 19 09:23:19 2021
@@ -8,10 +13,6 @@ class Curlconnect
   */
   function __construct($api,$options=[])
   {
-    static $verbose = false;
-    static $json_decode = true;
-    static $keep_json = false;
-    static $serialize = false;
     
     $opts = useroptions(['cookie' => '',
                          'json_decode' => true,
