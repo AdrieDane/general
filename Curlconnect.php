@@ -12,7 +12,10 @@ class Curlconnect
                          'json_decode' => true,
                          'keep_json' => false,
                          'data' => 'data',
-                         'info' => false],$options);
+                         'info' => false,
+                         'verbose' => false,
+                         'serialize' => false],$options);
+    
     $this->api= substr($api,-1)=='/' ? $api : $api.'/';
     if(isset($opts['cookie']) && $opts['cookie']==true)	{
       //      $this->cookie_file=sys_get_temp_dir().'/'.$opts['cookie'];
@@ -25,6 +28,10 @@ class Curlconnect
     
     if($opts['keep_json'] && $opts['keep_json']==true)	{
       $this->keep_json=true;
+    }
+    
+    if($opts['serialize'] && $opts['serialize']==true)	{
+      $this->serialize=true;
     }
     
     $this->data_field='data';
@@ -76,6 +83,9 @@ class Curlconnect
 
     // (C) CURL FETCH
     $this->json = curl_exec($ch);
+    if(isset($this->serialize) && $this->serialize==true)	{
+      $this->json = unserialize(base64_decode($this->json));
+    }
     if (curl_errno($ch)) {
       // (C1) CURL FETCH ERROR
       echo curl_error($ch);
