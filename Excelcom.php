@@ -114,8 +114,26 @@ class Excelcom
     if(!isset($this->sheet))	{
       $this->set_sheet();
     }
-    $this->sheet->Cells($row,$col)->Value=$data;
-    $this->sheet->Cells($row,$col)->Activate;
+    if(is_array($data))	{
+      $r=$row;
+          $c=$col;
+      foreach($data as $x) {
+        if(is_array($x))	{
+          $c=$col;
+          foreach($x as $value) {
+            $this->sheet->Cells($r,$c)->Value=$value;
+            $c++;
+          }
+          $r++;
+        }else	{
+          $this->sheet->Cells($row,$c)->Value=$x;
+          $c++;
+        }
+      }
+    }else	{
+      $this->sheet->Cells($row,$col)->Value=$data;
+      $this->sheet->Cells($row,$col)->Activate;
+    }
   } /* set_data */
 
   /*    Title: 	get_data
@@ -206,6 +224,19 @@ class Excelcom
     //free the object
     $this->excel = null;
   } /* Close */
+
+  /*    Title: 	save
+      Purpose:	
+      Created:	Fri Jul 29 12:17:34 2022
+      Author: 	
+*/
+function save()
+{
+  if(is_null($this->excel))	{
+    return;
+  }
+  $this->book->Save();
+} /* save */
 
 }
 ?>
