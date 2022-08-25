@@ -60,6 +60,10 @@ function pre_r($data,$ttl='',$as_string=FALSE)
     $ttl=$pars[0];
     }*/
   // echo '<br>ttl: '.$ttl;
+  if(is_object($data))	{
+    $class = new ReflectionClass(get_class($data));
+    $data->staticproperties = $class->getStaticProperties();
+  }
   $str = $ttl=='' 
     ? "<pre>\n".print_r($data,TRUE)."\n</pre>" 
     : "<pre>\n$ttl: ".print_r($data,TRUE)."\n</pre>";
