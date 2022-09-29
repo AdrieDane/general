@@ -340,7 +340,12 @@ class Bsform extends Bsdata
         $opts['title']=$x['title'];
       }
       if(($type=='checkbox' || $type=='radio' || $type=='submit') && $title_checks==true && isset($x['title']))	{
-        $x['title'] = $this->control_str($type,$opts) . $x['title'];
+        // for checkboxes and radio store title without control in pattern
+        // (it is not used for other things)
+        if(empty($x['pattern']))	{
+          $x['pattern']=$x['title'];
+        }
+        $x['title'] = $this->control_str($type,$opts) . $x['pattern'];
         
       }else	{
         $x['control']=$this->control_str($type,$opts);
@@ -374,11 +379,18 @@ class Bsform extends Bsdata
         Created:	Mon Jan 18 17:27:30 2021
         Author: 	Adrie Dane
   */
-  function update_formdata($post)
+  function update_formdata(&$post)
   {
 
     $keys=array_intersect(array_keys($post),
                           array_keys($this->data));
+    foreach($this->data as $key => &$x) {
+      if($x['input']=='checkbox')	{
+        $post[$key]=isset($post[$key]) ? 1 : 0;
+        $x['value']=$post[$key];
+      }
+    }
+    unset($x);
     foreach($keys as $key) {
       $this->data[$key]['value']=$post[$key];
     }

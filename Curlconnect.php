@@ -89,9 +89,6 @@ class Curlconnect
 
     // (C) CURL FETCH
     $this->json = curl_exec($ch);
-    if(self::$serialize==true)	{
-      $this->json = unserialize(base64_decode($this->json));
-    }
     if (curl_errno($ch)) {
       // (C1) CURL FETCH ERROR
       echo curl_error($ch);
@@ -100,6 +97,17 @@ class Curlconnect
       // echo $this->json;
       $this->result = self::$json_decode==true ?
                     json_decode($this->json,true) : $this->json;
+      if(self::$json_decode==true)	{
+        $this->result = json_decode($this->json,true);
+        if(!empty($this->result['data']) && !is_null($this->result['data']))	{
+          if(self::$serialize==true)	{
+            //            $this->result['data'] = unserialize(utf8_decode(base64_decode($this->result['data'])));
+            $this->result['data'] = unserialize(base64_decode($this->result['data']));
+          }
+        }
+      }else	{
+        $this->result = $this->json;
+      }
       if(self::$keep_json==false)	{
         unset($this->json);
       }

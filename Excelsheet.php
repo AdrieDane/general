@@ -400,13 +400,23 @@ function data($options=[])
       Created:	Thu Apr 01 09:28:55 2021
       Author: 	Adrie Dane
 */
-function all_data()
+function all_data($tables=false)
 {
   $sheets=$this->sheets();
   $data=array();
   foreach($sheets as $sheet) {
     $this->set_sheet($sheet);
-    $data[$sheet]=$this->data();
+    $X=$this->data();
+
+    if($tables==true)	{
+      // this turns $X with numerical indices into an associative array
+      array_walk($X, function(&$a) use ($X) {
+        $a = array_combine($X[0], $a);
+      });
+      array_shift($X); # remove column header;
+    }
+    $data[$sheet]=$X;
+    
   }
   return $data;
 } /* all_data */

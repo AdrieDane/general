@@ -17,7 +17,7 @@ class Siteinfo
         Created:	Mon Mar 15 11:26:24 2021
         Author: 	Adrie Dane
   */
-  function __construct($sub_site='cfmetabolomics',$start_dash=false)
+  function __construct($sub_site='cfm',$start_dash=false)
   {
     
     $this->site='';
