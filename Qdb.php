@@ -227,17 +227,22 @@ class Qdb extends mysqli
                          'single_row' => true,
                          'force_array' => false,
                          'array_type' => MYSQLI_ASSOC,
-                         'key_value' => false,
+                         'key_value' => false,       // no empty values allowed
+                         'key_value_empty' => false, // empty values allowed
                          'dimensions' => null,
                          'array_keys' => ''],$options);
     extract($opts);
 
     $A = $result->fetch_all($array_type);
 
-    if(!empty($A) && count(reset($A))==2 && $key_value==true)	{
+    if(!empty($A) && count(reset($A))==2 &&
+       ($key_value==true || $key_value_empty==true))	{
       $keys=array_keys(reset($A));
-      $A=array_filter(array_combine(array_column($A,$keys[0]),
-                                    array_column($A,$keys[1])));
+      $A = $key_value==true
+         ? array_filter(array_combine(array_column($A,$keys[0]),
+                                      array_column($A,$keys[1])))
+         : array_combine(array_column($A,$keys[0]),
+                       array_column($A,$keys[1]));
     }
     if($result->num_rows==1 && $single_row==true)	{
       $A=reset($A);
