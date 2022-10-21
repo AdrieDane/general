@@ -26,6 +26,7 @@ include_once 'Bsdata.php';
 include_once 'Bscell.php';
 include_once 'Bstable.php';
 include_once 'Bsform.php';
+include_once 'Bscontrols.php';
 include_once 'repo.php';
 include_once 'Blob.php';
 include_once 'Rscript.php';

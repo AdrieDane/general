@@ -315,8 +315,19 @@ class Bsform extends Bsdata
       }
       $opts['name']=$x['key'];
 
-      // Special cases
-      if(is_numeric($x['input'])) { // textarea
+      if(isset($x['array']) && !empty($x['array']))	{
+        $opts['array']=intval($x['array']);
+        $opts['name']=$x['key'].'[]';
+        // unset($x['array']);
+      }
+      // Special cases add array for select
+      if(is_array($x['input']))	{
+        //        $type='select';
+        $type = $x['type'];
+        $opts['choices']=$x['input'];
+        $opts['value'] = empty($x['value']) ? reset($opts['choices']) : $x['value'];
+        $opts['key_value'] = true;
+      }elseif(is_numeric($x['input'])) { // textarea
         $type='textarea';
         $opts['rows']=$x['input'];
       } elseif(substr($x['input'],0,1)=='[')	{ // multiple controls
@@ -325,7 +336,8 @@ class Bsform extends Bsdata
         $opts['name'] .= "[]";
         $opts['array']= $count;
       } elseif(strpos($x['input'],'|')!==false) { // select
-        $type='select';
+        //        $type='select';
+        $type = $x['type'];
         $opts['choices']=explode('|',$x['input']);
         $opts['value'] = empty($x['value']) ? $opts['choices'][0] : $x['value'];
       }
@@ -339,7 +351,8 @@ class Bsform extends Bsdata
       if($type=='radio')	{
         $opts['title']=$x['title'];
       }
-      if(($type=='checkbox' || $type=='radio' || $type=='submit') && $title_checks==true && isset($x['title']))	{
+      if(($type=='checkbox' || $type=='radio' || $type=='submit') &&
+         $title_checks==true && isset($x['title']))	{
         // for checkboxes and radio store title without control in pattern
         // (it is not used for other things)
         if(empty($x['pattern']))	{
@@ -347,7 +360,8 @@ class Bsform extends Bsdata
         }
         $x['title'] = $this->control_str($type,$opts) . $x['pattern'];
         
-      }else	{
+      } else	{
+        // pre_r([$type,$opts],'$opts');
         $x['control']=$this->control_str($type,$opts);
       } 
   
@@ -436,18 +450,34 @@ class Bsform extends Bsdata
     }      
   
     if($type=='select' && isset($opts['choices']))	{
+      //      pre_r($opts,'select');
       //  extract($opts);
-      $str = "<select class='form-select' name='$name'>\n";
-      foreach($choices as $choice) {
-        if(empty($choice))	{
-          continue;
+      $str ='';
+      for(	$i=0;	$i<$array;	$i++)	{
+        $str .= "<select class='form-select' name='$name'>\n";
+        foreach($choices as $key => $choice) {
+          if(empty($choice))	{
+            continue;
+          }
+          if(isset($value))	{
+            if(is_array($value))	{
+              if(isset($value[$i]) && !empty($value[$i]))	{
+                $v=$value[$i];
+              }else	{
+                $v='';
+              }
+            } else {
+              $v=$value;
+            }
+          }
+          $key_choice = isset($opts['key_value']) ? $key : $choice;
+          $str .= "<option value='$key_choice'";
+          $str .= isset($v) && $choice==$v ?
+               " selected>" : ">";
+          $str .= "$choice</option>\n";
         }
-        $str .= "<option value='$choice'";
-        $str .= isset($value) && $choice==$value ?
-             " selected>" : ">";
-        $str .= "$choice</option>\n";
+        $str .= "</select>\n";
       }
-      $str .= "</select>\n";
     } elseif($type=='textarea')	{
       if(!isset($rows))	{
         $rows=1;
@@ -481,10 +511,26 @@ class Bsform extends Bsdata
       }
 
       $str='';
-      $width= $array==1 ? 100 : floor(98/$array);
+      if($type=='text' && isset($opts['choices']))	{
+        $str .= "\n<datalist id='".$opts['name']."list'>\n";
+        foreach($choices as $choice) {
+          $str .= "  <option value='$choice'>\n";
+        }
+        $str .= "</datalist>\n\n";
+
+        unset($opts['choices']);
+
+        $opts['list']=$opts['name']."list";
+        //        pre_r($opts,'$opts***');
+      }
+      //      pre_r($array,$opts['name']);
+      $width= $array==1 || '$type'!='date'  ? 100 : floor(98/$array);
+      // $width=100;
+      $str .= "\n<span><div class='input-group'>\n";
       for(	$i=0;	$i<$array;	$i++)	{
         $str .= "<input class='form-control' type='$type'";
-        $attributes=array_intersect(['name'],array_keys($opts));
+        $attributes=array_intersect(['name','list'],array_keys($opts));
+        //        pre_r($attributes,'$attributes');
         foreach($attributes as $attr) {
           $str .=  " $attr='".$opts[$attr]."'";
           // unset($opts[$attr]);
@@ -508,8 +554,11 @@ class Bsform extends Bsdata
         //          " placeholder='dd-mm-yyyy'>" : 
         //          " style='width:$width%;'>\n";
         $str .= $type == "date" ? ">" : " style='width:$width%;'>\n";
-      
+
+        // $str .= ">\n";
+        //        $str .= "</div>\n";
       }
+      $str .= "</div></span>\n";
       // $str .=  ">";
     }
 

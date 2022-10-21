@@ -230,7 +230,8 @@ class Qdb extends mysqli
                          'key_value' => false,       // no empty values allowed
                          'key_value_empty' => false, // empty values allowed
                          'dimensions' => null,
-                         'array_keys' => ''],$options);
+                         'array_keys' => '',
+                         'ignore' => []],$options);
     extract($opts);
 
     $A = $result->fetch_all($array_type);
@@ -259,7 +260,13 @@ class Qdb extends mysqli
       //      pre_r($array_keys);
       $A=array_combine(array_column($A,$array_keys),$A);
     }
-    
+    if(!empty($A) && !empty($ignore))	{
+      foreach($ignore as $key) {
+        if(isset($A[$key]))	{
+          unset($A[$key]);
+        }
+      }
+    }
     if(self::$verbose==true)	{
       pre_r($A,"<b>Query Result</b>");
       echo '<br>';
@@ -401,6 +408,37 @@ class Qdb extends mysqli
     return array_combine(array_column($fieldinfo,'name'),
                          $fieldinfo);
   } /* fieldinfo */
+  
+  /*    Title: 	metadata
+        Purpose:	get metadata for table
+        Created:	Thu Oct 20 08:35:04 2022
+        Author: 	
+  */
+  function metadata($table,$options=[],$keys=[])
+  {
+    if(isset($options['defaults']) && $options['defaults']==true)	{
+      $keys=['COLUMN_NAME', 'COLUMN_DEFAULT'];
+      unset($options['defaults']);
+    }
+    $fields = empty($keys)? "*" : implode(", ",$keys);
+    
+    if(count($keys)==2 && !isset($options['key_value_empty']))	{
+      $opts = useroptions(['key_value_empty' => true,
+                           'ignore' => ['UpdateStamp']],$options);
+    }else	{
+      $opts = useroptions(['key_value' => false,
+                           'array_keys' => 'COLUMN_NAME',
+                           'ignore' => ['UpdateStamp']],
+                          $options);
+    }
+                         
+    $sql = "SELECT $fields ".
+         "FROM INFORMATION_SCHEMA.COLUMNS " .
+         "WHERE ".
+         "TABLE_NAME = '$table'";
+    $result = $this->query($sql,$opts);
+    return $result;
+  } /* metadata */
 
   /*    Title: 	primary_key
         Purpose:	returns primary key of table
