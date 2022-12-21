@@ -32,8 +32,8 @@ class Bsform extends Bsdata
     } else {
       $tbl = new importtable($file,$opts);
     }
-
-    // collect hidden controls (move then outside table)
+    //    pre_r($tbl,'$tbl');
+    // collect hidden controls (move them outside table)
     $data=[];
     $hidden=[];
     $check_present=['unit' => '','error' => '', 'warning' =>'' , 'auto' => '', 'tooltip' =>'', 'control' =>''];
@@ -52,7 +52,7 @@ class Bsform extends Bsdata
         $data[]=$x;
       }
     }
-    
+
     // move visible columns to the front
     $cols=$opts['show_column'];
     if(isset($cols)&& !empty($cols))	{
@@ -71,7 +71,7 @@ class Bsform extends Bsdata
     }
     $tbl=new datatable($data);
     
-    // pre_r($tbl,'$tbl');
+    //    pre_r($tbl,'$tbl');
     //exit;
     $keys=array_keys($tbl->data);
     $keys=array_combine($keys,$keys);
@@ -84,6 +84,7 @@ class Bsform extends Bsdata
         $keys[$k] = $x['key'];
       }
     }
+    unset($x);
     $tbl->data=array_combine($keys,$tbl->data);
 
     // pre_r($keys,'$keys');
@@ -300,7 +301,7 @@ class Bsform extends Bsdata
   function set_controls($title_checks)
   {
     foreach($this->data as &$x) {
-      // pre_r($x,'$x');
+      //      pre_r($x,'$x');
       $opts=['width' => '',
              'rows' => '',
              'default' => '',
@@ -310,7 +311,7 @@ class Bsform extends Bsdata
              'title_checks' => $title_checks];
 
       $type=$x['input'];
-      foreach(['value','error','warning','auto','value','tooltip'] as $field) {
+      foreach(['value','error','warning','auto','value','tooltip','extracode'] as $field) {
         $opts[$field]=$x[$field];
       }
       $opts['name']=$x['key'];
@@ -322,6 +323,7 @@ class Bsform extends Bsdata
       }
       // Special cases add array for select
       if(is_array($x['input']))	{
+        //        pre_r($x['input']);
         //        $type='select';
         $type = $x['type'];
         $opts['choices']=$x['input'];
@@ -419,6 +421,7 @@ class Bsform extends Bsdata
   */
   function control_str($type,$opts=[])
   {
+    //    pre_r($opts,'$opts');
     // echo "type: $type<br>\n";
     $input_types=["button", "checkbox", "color", "date", "datetime-local", "email", 
                   "file", "hidden", "image", "month", "number", "password", "radio", 
@@ -456,9 +459,9 @@ class Bsform extends Bsdata
       for(	$i=0;	$i<$array;	$i++)	{
         $str .= "<select class='form-select' name='$name'>\n";
         foreach($choices as $key => $choice) {
-          if(empty($choice))	{
-            continue;
-          }
+          //          if(empty($choice))	{
+          //            continue;
+          //          }
           if(isset($value))	{
             if(is_array($value))	{
               if(isset($value[$i]) && !empty($value[$i]))	{
@@ -472,7 +475,7 @@ class Bsform extends Bsdata
           }
           $key_choice = isset($opts['key_value']) ? $key : $choice;
           $str .= "<option value='$key_choice'";
-          $str .= isset($v) && $choice==$v ?
+          $str .= isset($v) && $key_choice==$v ?
                " selected>" : ">";
           $str .= "$choice</option>\n";
         }
@@ -550,6 +553,12 @@ class Bsform extends Bsdata
         if(isset($pattern))	{
           $str .= " pattern='$pattern'";
         }
+
+        if(isset($extracode))	{
+          //          pre_r($extracode,'$extracode');
+          $str .= " $extracode";
+        }
+        
         //  $str .= $type == "date" ?
         //          " placeholder='dd-mm-yyyy'>" : 
         //          " style='width:$width%;'>\n";

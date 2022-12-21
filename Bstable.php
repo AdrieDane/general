@@ -22,6 +22,7 @@ class Bstable extends datatable
            'show_column' => [],
            'data_align' => [],
            'data_sortable' => [],
+           'data_filter' => [],
            'data_formatter' => [],
            'data_title' => [],
            'id' => 'table',
@@ -356,6 +357,7 @@ class Bstable extends datatable
       $idx_align=0;
       $idx_sortable=0;
       $idx_title=0;
+      $idx_filter=0;
       foreach($first_row as $key => $cell) {
         $str.= "\n      ";
         
@@ -374,6 +376,13 @@ class Bstable extends datatable
         } else {
           $title=[];
         }
+        
+        if($visible==true && !empty($data_filter) && $idx_filter<count($data_filter))	{
+          $filter=$data_filter[$idx_filter];
+          $idx_filter++;
+        } else {
+          $filter=[];
+        }
 
         if($visible==true && !empty($data_sortable) && $idx_sortable<count($data_sortable))	{
           $sortable=$data_sortable[$idx_sortable];
@@ -389,6 +398,7 @@ class Bstable extends datatable
                        'visible' => $visible,
                        'align' => $align,
                        'title' => $title,
+                       'filter' => $filter,
                        'sortable' => $sortable,
                        'formatter' => $formatter];
         //        pre_r($cell_options);

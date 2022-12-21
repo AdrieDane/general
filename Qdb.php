@@ -48,6 +48,8 @@ class Qdb extends mysqli
  
     parent :: __construct( $db_hostname, $db_username, $db_password, $db_database);
     
+    $this->set_charset("utf8");
+
     if ($this->connect_error) 
       die("Connection failed: " . $this->connect_error);
   }
@@ -519,7 +521,8 @@ class Qdb extends mysqli
       if(count($keys) != count(array_intersect($keys,$column_names)))	{
         //pre_r($keys,'$keys');
         //pre_r($column_names,'$column_names');
-        exit("ERROR Qdb: update not all keys are present in database table.");
+        exit("ERROR Qdb: update not all keys are present in database table.".
+             pre_r(array_diff($keys,$column_names),'diffs',true));
       }
       
       $column_names=$A->column_names();
