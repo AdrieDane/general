@@ -88,24 +88,18 @@ class Curlconnect
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post));
 
     // (C) CURL FETCH
-    $this->json = curl_exec($ch);
+    $curl_result = curl_exec($ch);
     if (curl_errno($ch)) {
       // (C1) CURL FETCH ERROR
       echo curl_error($ch);
     } else {
       // (C2) CURL FETCH OK
-      // echo $this->json;
-      $this->result = self::$json_decode==true ?
-                    json_decode($this->json,true) : $this->json;
+      if(self::$serialize==true)	{
+        $this->json = unserialize(base64_decode($curl_result));
+      }
       if(self::$json_decode==true)	{
         $this->result = json_decode($this->json,true);
-        if(!empty($this->result['data']) && !is_null($this->result['data']))	{
-          if(self::$serialize==true)	{
-            //            $this->result['data'] = unserialize(utf8_decode(base64_decode($this->result['data'])));
-            $this->result['data'] = unserialize(base64_decode($this->result['data']));
-          }
-        }
-      }else	{
+      } else	{
         $this->result = $this->json;
       }
       if(self::$keep_json==false)	{
