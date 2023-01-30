@@ -306,6 +306,33 @@ class Qdb extends mysqli
     return $result;
   }
 
+  /*    Title: 	join_columns
+        Purpose:	
+        Created:	Mon Jan 30 17:14:37 2023
+        Author: 	
+  */
+  function join_columns($tables_str)
+  {
+    $tables=explode(',',$tables_str);
+    $arr = [];
+    foreach($tables as $table) {
+      $t=trim($table);
+      $cols = $this->query("SELECT COLUMN_NAME, ORDINAL_POSITION ".
+                           "FROM INFORMATION_SCHEMA.COLUMNS " .
+                           "WHERE ".
+                           "TABLE_NAME = '$t'",
+                           ['key_value' => true,
+                            'single_row' => false]);
+      foreach($cols as $k => &$v) {
+        $v = $table.'.'.$k;
+        if(!in_array($k,array_keys($arr)))	{
+          $arr[$k] = $v;
+        }
+      }
+    }
+    return implode(', ',$arr);
+  } /* join_columns */
+
   /*    Title: 	column_types
         Purpose:	
         Created:	Sat May 22 08:31:59 2021

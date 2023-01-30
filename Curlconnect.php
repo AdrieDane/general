@@ -95,7 +95,10 @@ class Curlconnect
     } else {
       // (C2) CURL FETCH OK
       if(self::$serialize==true)	{
-        $this->json = unserialize(base64_decode($curl_result));
+        // pre_r($curl_result,'$curl_result');
+        $decoded=base64_decode($curl_result);
+        // pre_r($decoded,'$decoded');
+        $this->json = unserialize($decoded);
       }
       if(self::$json_decode==true)	{
         $this->result = json_decode($this->json,true);
