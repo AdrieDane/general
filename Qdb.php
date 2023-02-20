@@ -311,26 +311,38 @@ class Qdb extends mysqli
         Created:	Mon Jan 30 17:14:37 2023
         Author: 	
   */
-  function join_columns($tables_str)
+  function join_columns($tables_str,$out='implode')
   {
+    $table_column=false; // tables only
+    if(in_array($out,['table.column','implode']))	{
+      $table_column=true;
+    }
     $tables=explode(',',$tables_str);
     $arr = [];
     foreach($tables as $table) {
       $t=trim($table);
-      $cols = $this->query("SELECT COLUMN_NAME, ORDINAL_POSITION ".
+      $cols = $this->query("SELECT COLUMN_NAME, TABLE_NAME ".
                            "FROM INFORMATION_SCHEMA.COLUMNS " .
                            "WHERE ".
                            "TABLE_NAME = '$t'",
                            ['key_value' => true,
                             'single_row' => false]);
       foreach($cols as $k => &$v) {
-        $v = $table.'.'.$k;
+        if($table_column==true)	{
+          $v .= '.'.$k;
+        }
         if(!in_array($k,array_keys($arr)))	{
           $arr[$k] = $v;
         }
       }
+      unset($v);
     }
-    return implode(', ',$arr);
+    
+    if($out=='implode')	{
+      return implode(', ',$arr);
+    }else	{
+      return $arr;
+    }
   } /* join_columns */
 
   /*    Title: 	column_types

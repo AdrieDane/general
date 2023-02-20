@@ -426,7 +426,7 @@ class Bsform extends Bsdata
     $input_types=["button", "checkbox", "color", "date", "datetime-local", "email", 
                   "file", "hidden", "image", "month", "number", "password", "radio", 
                   "range", "reset", "search", "submit", "tel", "text", "time", 
-                  "url", "week","select","textarea"];
+                  "url", "week","select","textarea","plaintext"];
     if(!in_array($type,$input_types)) {
       return '';
     }
@@ -531,7 +531,8 @@ class Bsform extends Bsdata
       // $width=100;
       $str .= "\n<span><div class='input-group'>\n";
       for(	$i=0;	$i<$array;	$i++)	{
-        $str .= "<input class='form-control' type='$type'";
+        $plain = $type== 'plaintext' ? '-plaintext' : '';
+        $str .= "<input class='form-control$plain' type='$type'";
         $attributes=array_intersect(['name','list'],array_keys($opts));
         //        pre_r($attributes,'$attributes');
         foreach($attributes as $attr) {

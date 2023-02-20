@@ -70,7 +70,16 @@ function rename_keys($rename=[])
 */
 function column_to_keys($column)
 {
-  $this->data=array_combine(array_column($this->data,$column),$this->data);
+  $keys = array_column($this->data,$column);
+  if(empty($keys))	{
+    exit("ERROR datatable->column_to_keys()<br>\nColumn: '$column' does not exist in data");
+  }
+  //pre_r($keys,'$keys');
+  if(count(array_unique($keys))!=count($this->data))	{
+    exit("ERROR datatable->column_to_keys()<br>\n$column: ".count(array_unique($keys))."uniques<br>\n".
+         "data: ".count($this->data)."uniques");
+  }
+  $this->data=array_combine($keys,$this->data);
 } /* column_to_keys */
 
   
