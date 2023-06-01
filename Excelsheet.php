@@ -9,9 +9,11 @@ define("EXCELSHEET_FORM_DATE_FORMAT", "Y-m-d");
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
+#[\AllowDynamicProperties]
 class Excelsheet
 {
   use Optionsarray;
+  use BookFuncs;
 
   public function __construct($file=NULL,$options=array())  {
 
@@ -30,7 +32,7 @@ class Excelsheet
     }
 
     $opts = $this->useroptions(['sheet' => '',
-				'dataonly' => true],$options);
+                                'dataonly' => true],$options);
 
 
     //    pre_r($opts,'$opts');
@@ -367,8 +369,13 @@ function getdate($cell)
       Created:	Wed Mar 31 08:56:08 2021
       Author: 	Adrie Dane
 */
-function data($options=[])
+  function data($options=[],&$warning='')
 {
+  $opts = useroptions(['remove_empty' => true,
+                       'nullValue' => null,
+                       'calculateFormulas' => true, // default true
+                       'formatData' => true,
+                       'returnCellRef' => false],$options);
   /*if(isset($options['cell']))	{
     $value=$this->sheet->getValue();
     $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($value);
@@ -378,48 +385,84 @@ function data($options=[])
     $this->set_sheet(0);
   }
   $this->reader->setReadDataOnly(TRUE);
-  $data = $this->sheet->toArray();
-  //  pre_r($data,'Excelsheet:$data');
-  $opts=['remove_empty'=>true]; // strip empty rows and columns from the end
-  
-  // get user options
-  if(!empty($options))	{
-    $keys=array_intersect(array_keys($opts),array_keys($options));
-    foreach($keys as $key) {
-      $opts[$key]=$options[$key];
-    }
+  //  $data = $this->sheet->toArray();
+  try {
+    $data = $this->sheet->toArray($opts['nullValue'],
+                                  $opts['calculateFormulas'],
+                                  $opts['formatData'],
+                                  $opts['returnCellRef']);
+  } catch (Exception $e){
+    $data = $this->sheet->toArray($opts['nullValue'],
+                                  false,
+                                  $opts['formatData'],
+                                  $opts['returnCellRef']);
+    //$warning .= 'could not decode formula';
+    //pre_r($data,'$data');
+    $warning .=  $e->getMessage();
+    //    exit;
   }
-  $data=self::crop_empty($data);
+
+  if($opts['remove_empty']==true)	{
+    $data=self::crop_empty($data);
+  }
+
   $this->reader->setReadDataOnly(FALSE);
 
   return $data;
 } /* data */
 
-/*    Title: 	all_data
-      Purpose:	returns data from all sheets in an associative array in which the keys are the sheetnames
-      Created:	Thu Apr 01 09:28:55 2021
-      Author: 	Adrie Dane
-*/
-function all_data($tables=false)
-{
-  $sheets=$this->sheets();
-  $data=array();
-  foreach($sheets as $sheet) {
-    $this->set_sheet($sheet);
-    $X=$this->data();
-
-    if($tables==true)	{
-      // this turns $X with numerical indices into an associative array
-      array_walk($X, function(&$a) use ($X) {
-        $a = array_combine($X[0], $a);
-      });
-      array_shift($X); # remove column header;
-    }
-    $data[$sheet]=$X;
+  /*    Title: 	all_data
+        Purpose:	returns data from all sheets in an associative array in which the keys are the sheetnames
+        Created:	Thu Apr 01 09:28:55 2021
+        Author: 	Adrie Dane
+  */
+  function all_data($tables=false,&$warning='',$options=[])
+  {
+    $opts = useroptions(['remove_empty' => true,
+                         'nullValue' => null,
+                         'calculateFormulas' => true, // default true
+                         'formatData' => true,
+                         'returnCellRef' => false],$options);
     
-  }
-  return $data;
-} /* all_data */
+    $sheets=$this->sheets();
+    $data=array();
+    foreach($sheets as $sheet) {
+      $this->set_sheet($sheet);
+      $w='';
+      $X=$this->data($opts,$w);
+      $all_null=false;
+      if(!empty($w))	{
+        $warning .= "WARNING Sheet '$sheet': ".$w."<br>\n";
+        $all_null=true;
+        foreach($X as &$x) {
+          foreach($x as &$val) {
+            if(substr($val,0,1)=='=')	{
+              $val = null;
+            } elseif(!is_null($val))	{
+              $all_null=false;
+            }
+            $val = substr($val,0,1)=='='? null :$val;
+          }
+          unset($val);
+        }
+        unset($x);
+      }
+      if($all_null==true)	{
+        $warning .= "WARNING Sheet '$sheet' removed.<br>\n";
+        continue;
+      }
+      if($tables==true)	{
+        // this turns $X with numerical indices into an associative array
+        array_walk($X, function(&$a) use ($X) {
+          $a = array_combine($X[0], $a);
+        });
+        array_shift($X); # remove column header;
+      }
+      $data[$sheet]=$X;
+    
+    }
+    return $data;
+  } /* all_data */
 
 /*    Title: 	download
       Purpose:	

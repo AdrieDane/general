@@ -1,6 +1,8 @@
 <?php
+#[\AllowDynamicProperties]
 class Bscell
 {
+  // public $value, $hidevalue, $warning, $hidecolumn, $type;
   /*    Title: 	__construct
         Purpose:	
         Created:	Sat May 01 08:42:51 2021

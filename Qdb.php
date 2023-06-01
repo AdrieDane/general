@@ -37,6 +37,7 @@ class QdbException extends Exception {
       Created:	Sun Jul 16 11:26:48 2017
       Author: 	Adrie Dane
 */
+#[\AllowDynamicProperties]
 class Qdb extends mysqli
 {
   static $verbose=false;
@@ -280,7 +281,8 @@ class Qdb extends mysqli
     $result->close();
     return $A;
   } /* format_result */
-
+  
+  #[\ReturnTypeWillChange]
   function query($query='',$options=[])
   {
     if(self::$verbose==true)	{

@@ -33,7 +33,7 @@ class importtable extends datatable
   public static $numcol = array(); # Static class variable.
   public static $reqcol = array(); # Static class variable.
 
-  public function __construct($file=NULL,$user_options=array(),$con=NULL,$table_class=NULL) 
+  public function __construct($file=NULL,$user_options=array(),$con=NULL,&$log='') 
   {
 
     // print_r($con);
@@ -44,8 +44,10 @@ class importtable extends datatable
     }
 
     // the $table_class argument is just a shortcut for setting this option
-    if(!is_null($table_class))	{
-      $user_options['table_class']=$table_class;
+    if(!empty($log))	{
+      echo('OLD $user_options[table_class]=$table_class');
+      exit('$table_class argument does not longer exist set it in $user_options');
+     
     }
 
     $opts=['importtableId' => 0,
@@ -57,6 +59,7 @@ class importtable extends datatable
            'sheet' => '',
            'skiprows' => 0,
            'skipemptyrows' => true,
+           'minfilllevel' => .5, // at least 50% of the values in a row must be present
            'rename' => [],
            'numeric' => [],
            'required' => [],
@@ -97,9 +100,11 @@ class importtable extends datatable
     
 
     if($opts['file_type']=='xlsx')	{
+      $log .= "File Type: ".$opts['file_type']."<br>\n";
 
       $excelsheet = new Excelsheet($file,['sheet' => $opts['sheet']]);
       $importtable = $excelsheet->data();
+      $log .= "Imported Rows: ".count($importtable)."<br>\n";
       // pre_r($importtable,'importtable');
       if(empty($opts['sheet']))	{
         $opts['sheet']=$excelsheet->name();
@@ -122,7 +127,10 @@ class importtable extends datatable
 
     // remove leading and trailing spaces
     foreach($importtable as &$row) {
-      $row = array_map('trim',$row);
+      //      $row = array_map('trim',$row );
+      $row = array_map(function($a) {
+        return trim($a ?? '');
+      }, $row);
     }
     unset($row);
     
@@ -149,6 +157,16 @@ class importtable extends datatable
     // remove empty rows
     if($opts['skipemptyrows']==true)	{
       $importtable=array_filter($importtable, function ($a) { return !empty(array_filter($a));});
+      $log .= "Without Empty Rows: ".count($importtable)."<br>\n";
+    }
+    
+    // remove non filled rows
+    if($opts['minfilllevel']>0)	{
+      $frac=$opts['minfilllevel'];
+      $importtable=array_filter($importtable, function ($a) use($hdr,$frac)
+      { return count(array_filter($a))>$frac*count($hdr);});
+      $log .= "Without Non Filled Rows: ".count($importtable)."<br>\n";
+
     }
 
     // remove columns with empty headers

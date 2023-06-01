@@ -8,9 +8,11 @@
   skip header row
   - 'hide_column' array('key','tooltip','td','required')
 */
+#[\AllowDynamicProperties]
 class Bstable extends datatable
 {
   use ValidateColumn;
+  //  public $options, $data, $hdrs, $cells, $validate, $data_only;
 
   public function __construct($data,$options=[]) 
   {
@@ -24,6 +26,7 @@ class Bstable extends datatable
            'data_sortable' => [],
            'data_filter' => [],
            'data_formatter' => [],
+           'data_id_field' => '',
            'data_title' => [],
            'id' => 'table',
            'cls' => 'table-sm table-hover',
@@ -33,6 +36,8 @@ class Bstable extends datatable
            'data_only' =>true];
 
     $this->options=useroptions($opts,$options);
+
+    //    pre_r($this->options,'options');
 
     // set visible columns
     $cols = array_keys(reset($data));
@@ -105,6 +110,8 @@ class Bstable extends datatable
     $this->data_only=$this->options['data_only'];
     // $this->data_only=false;
     $this->set_column_options();
+    //    echo $this->json(true);
+
   }
 
   /*    Title: 	init_cells
@@ -332,8 +339,9 @@ class Bstable extends datatable
       $str .= "</div>";
       $toolbar=" data-toolbar='#button_toolbar'";
     }
-
-    $str .= "<table data-toggle='table'$toolbar data-search='true'  id='$id' class='table $cls' 
+    //    pre_r($data_id_field,'$data_id_field');
+    $id_field = isset($data_id_field) && !empty($data_id_field) ? " data-id-field='$data_id_field'" : '';
+    $str .= "<table data-toggle='table'$toolbar$id_field data-search='true'  id='$id' class='table $cls' 
   data-silent-sort='false'
   data-show-fullscreen='true' 
   data-show-columns='true'  

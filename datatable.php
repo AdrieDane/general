@@ -3,12 +3,15 @@
 
 
 
+#[\AllowDynamicProperties]
 class datatable implements ArrayAccess, Iterator, Countable
 {
+  public $data;
   public static $rename = array(); # Static class variable.
   public static $numcol = array(); # Static class variable.
   // private $ix = array();
 
+  
   public function __construct($data) 
   {
     if($data instanceof datatable)	{
@@ -44,6 +47,42 @@ class datatable implements ArrayAccess, Iterator, Countable
     //    $this->ncols=count($this->data[0]);
   }
 
+/*    Title: 	bsoptions
+      Purpose:	creates template options
+      Created:	Tue Feb 21 14:15:39 2023
+      Author: 	
+*/
+function bsoptions()
+{
+  $fields = $this->column_names();
+  $options = [];
+  $options['table'] = ['data-toggle' => 'table',
+                       'data-toolbar' => '#toolbar',
+                       'data-id-field' => 'projectId',
+                       'data-search' => 'true',
+                       'id' => 'table',
+                       'class' => 'table table-sm table-hover',
+                       'data-silent-sort' => 'false',
+                       'data-show-fullscreen' => 'true' ,
+                       'data-show-columns' => 'true'  ,
+                       'data-show-toggle' => 'true',
+                       'data-show-pagination-switch' => 'true'];
+  
+  $defaults = ['data-filter-control' => 'input',
+               'data-halign' => 'left',
+               'data-align' => 'left',
+               'data-title' => 'Code',
+               'data-sortable' => '0',
+               'data-visible' => 'false'];
+  $options['column'] = [];
+  foreach($fields as $field) {
+    $options['column'][$field] = $defaults;
+    $options['column'][$field]['data-title'] = $field;
+  }
+  return $options;
+} /* bsoptions */
+
+  
 /*    Title: 	rename_keys
       Purpose:	
       Created:	Mon Jul 19 17:38:58 2021
@@ -770,6 +809,49 @@ _TABLE;
   
   } /* htmltable */
 
+  /*    Title: 	workbook
+        Purpose:	Add workbook rows and column header
+        Created:	Wed Mar  1 09:48:04 2023
+        Author: 	
+  */
+  function htmlworkbook($field="data")
+  {
+    $data=[];
+    //    pre_r(range(1,10),'rng1');
+    //    pre_r(range(1,count(reset($this->$field))+1),'rng');
+    $hdrs = array_map('Excelsheet::column_convert',range(1,count(reset($this->$field))));
+    $cls="table w-auto";
+    $str='';
+  
+    $str.= "<table class='$cls'>\n";
+    $str.= "  <thead class='bg-light sticky-top'>\n";
+    $str.= "    <tr>\n";
+    $str.= "      <th  scope='col'></th>\n";
+    $str.= "      <th  scope='col'>";
+    $str.= implode("</th>\n      <th  scope='col'>",$hdrs);
+    $str.= "</th>\n";
+    $str.= "    </tr>\n";
+    $str.= "  </thead>\n";
+
+    $str.= "  <tbody>\n";
+    $i=1;
+    foreach($this->$field as $x) {
+      $str.= "    <tr>\n";
+      $str.= "      <td class='bg-light'><b>$i</b></td>\n";
+      $str.= "      <td>";
+      $str.= implode("</td>\n      <td>",$x);
+      $str.= "</td>\n";
+      $str.= "    </tr>\n";
+      $i++;
+    }
+    $str.= "  </tbody>\n";
+
+
+    $str.= "</table>\n";
+
+    return $str;
+  } /* workbook */
+
 
   //('','0','Item 0','$0',''),
   function sql_old($table,$field='data')
@@ -958,29 +1040,29 @@ _TABLE;
 
 
   // START Iterator interface
-  function rewind() {
+  function rewind(): void {
     reset($this->data);
   }
 
-  function current() {
+  function current(): mixed {
     return current($this->data);
   }
 
-  function key() {
+  function key(): mixed {
     return key($this->data);
   }
 
-  function next() {
+  function next(): void {
     next($this->data);
   }
 
-  function valid() {
+  function valid(): bool {
     return key($this->data) !== null;
   }
   // END Iterator interface 
 
   // START ArrayAccess interface
-  public function offsetSet($offset, $value) {
+  public function offsetSet($offset, $value): void {
     if (is_null($offset)) {
       $this->data[] = $value;
     } else {
@@ -988,21 +1070,21 @@ _TABLE;
     }
   }
 
-  public function offsetExists($offset) {
+  public function offsetExists($offset): bool {
     return isset($this->data[$offset]);
   }
 
-  public function offsetUnset($offset) {
+  public function offsetUnset($offset): void {
     unset($this->data[$offset]);
   }
 
-  public function offsetGet($offset) {
+  public function offsetGet($offset): mixed {
     return isset($this->data[$offset]) ? $this->data[$offset] : null;
   }
   // END ArrayAccess interface //
 
   // START Countable interface
-  public function count() {
+  public function count(): int {
     return count($this->data);
   }
   // END Countable interface

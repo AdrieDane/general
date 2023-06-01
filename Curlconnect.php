@@ -1,6 +1,8 @@
 <?php
+#[\AllowDynamicProperties]
 class Curlconnect
 {
+  //  public $api, $cookie_file, $data_field, $result, $endpoint, $json;
   static $verbose = false;
   static $json_decode = true;
   static $keep_json = false;
