@@ -91,7 +91,7 @@ trait BookFuncs
     //    $data=[];
     //    pre_r(range(1,10),'rng1');
     //    pre_r(range(1,count(reset($data))+1),'rng');
-    $hdrs = array_map('self::column_convert',range(1,count(reset($data))));
+    $hdrs = array_map([self::class, 'column_convert'],range(1,count(reset($data))));
     $cls="table w-auto";
     $str='';
 

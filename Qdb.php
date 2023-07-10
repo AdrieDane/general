@@ -399,7 +399,7 @@ class Qdb extends mysqli
         $prepared .= 'b';
       } elseif(in_array($types[$key],['double','float']))	{
         $prepared .= 'd';
-      } elseif(in_array($types[$key],['varchar','char','longtext','date','text']))	{
+      } elseif(in_array($types[$key],['varchar','char','longtext','mediumtext','date','text']))	{
         $prepared .= 's';
       } else {
         exit("Qdb type_str unknown type: ".$types[$key]);
@@ -459,8 +459,10 @@ class Qdb extends mysqli
   */
   function metadata($table,$options=[],$keys=[])
   {
+    $defaults=false;
     if(isset($options['defaults']) && $options['defaults']==true)	{
-      $keys=['COLUMN_NAME', 'COLUMN_DEFAULT'];
+      //      $keys=['COLUMN_NAME', 'COLUMN_DEFAULT'];
+      $defaults=true;
       unset($options['defaults']);
     }
     $fields = empty($keys)? "*" : implode(", ",$keys);
@@ -480,6 +482,32 @@ class Qdb extends mysqli
          "WHERE ".
          "TABLE_NAME = '$table'";
     $result = $this->query($sql,$opts);
+
+    if($defaults==true)	{
+      $arr=[];
+      foreach($result as $key => $x) {
+          echo "\n<br>".$key."(".gettype($x['COLUMN_DEFAULT']).") => ".$x['COLUMN_DEFAULT'];
+        if(is_string($x['COLUMN_DEFAULT']))	{
+          if($x['COLUMN_DEFAULT']=='NULL' && in_array($x['DATA_TYPE'],['date','varchar']))	{
+            $x['COLUMN_DEFAULT']=='';
+          }
+          $x['COLUMN_DEFAULT'] = $x['DATA_TYPE']=='datexx'
+                               ? $x['COLUMN_DEFAULT']
+                               : str_replace("'","",$x['COLUMN_DEFAULT']);
+
+          if(($x['COLUMN_DEFAULT']=='NULL' || is_null($x['COLUMN_DEFAULT'])) &&
+              in_array($x['DATA_TYPE'],['date','varchar']))	{
+            $x['COLUMN_DEFAULT']=='';
+          }
+          $arr[$key] = $x['COLUMN_DEFAULT'];
+        }else	{
+          $arr[$key] = $x['COLUMN_DEFAULT'];
+        }
+      }
+      return $arr;
+    }
+
+    
     return $result;
   } /* metadata */
 
@@ -734,6 +762,12 @@ class Qdb extends mysqli
       $A = new datatable($A);
     }
     
+    if(!empty($keys))	{ // only preserve keys to update
+      $A=$A->columns($keys);
+    }
+    //    pre_r($keys,'$keys');
+    //    pre_r($A,'$A');
+    
     // step 2 data with numerical fields can only be used when number of fields match
     if(!$A->is_associative(2))	{
       //      pre_r($A,'$A');
@@ -765,9 +799,6 @@ class Qdb extends mysqli
       return $A;
     }
 
-    if(!empty($keys))	{ // only preserve keys to update
-      $A=$A->columns($keys);
-    }
     //    pre_r($A,'$A');
     return $A;
   } /* map_keys */
@@ -782,11 +813,13 @@ class Qdb extends mysqli
   {
 
     $A=$this->map_keys($table,$A,$keys);
-    
+    //    pre_r($A,'$A');
+    //    exit;
     // get type string from datatable
     // $type_str = $A->gettype([],true);
     $field_keys=$A->column_names();
     $type_str = $this->type_str($table,$field_keys);
+    pre_r($type_str,'$type_str');
     $nkeys = count($field_keys);
     $questionmarks = array_fill(0,$nkeys,'?');
     $questionmarks="(".implode(", ",$questionmarks).")";

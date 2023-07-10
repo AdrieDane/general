@@ -166,15 +166,18 @@ function form_dateconvert($value)
 */
 public static function crop_empty($data)
 {
-  
+
   // remove empty rows and columns from the end
   $row=count($data)-1;
-  while(!array_filter($data[$row]))	{
+  while($row>=0 && !array_filter($data[$row]))	{
     unset($data[$row]);
     $row--;
   }
+  if(empty($data) || is_null($data))	{
+    return [];
+  }
   $col=count($data[0])-1;
-  while(!array_filter(array_column($data,$col)))	{
+  while($col>=0 && !array_filter(array_column($data,$col)))	{
     foreach($data as &$x) {
       unset($x[$col]);
     }
@@ -436,12 +439,12 @@ function getdate($cell)
         $all_null=true;
         foreach($X as &$x) {
           foreach($x as &$val) {
-            if(substr($val,0,1)=='=')	{
+            if(substr($val ?? '' ,0,1)=='=')	{
               $val = null;
             } elseif(!is_null($val))	{
               $all_null=false;
             }
-            $val = substr($val,0,1)=='='? null :$val;
+            $val = substr($val ?? '',0,1)=='='? null :$val;
           }
           unset($val);
         }

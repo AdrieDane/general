@@ -2,6 +2,27 @@
 class Databook
 {
   use BookFuncs;
+  
+  public $data=[];
+  public $range=[];
+  public $sheet=null;
+  public $filename='';
+  
+  public function __construct($data) 
+  {
+    $this->data = [];
+    foreach($data as $sheet => $x) {
+      if(empty($x))	{ // skip empty sheets
+        continue;
+      }
+      $this->data[$sheet]=$x;
+      $this->range[$sheet] = ['A1',
+                              self::column_convert(count(reset($this->data[$sheet]))).
+                              count($this->data[$sheet])];
+    }
+    $keys = array_keys($this->data);
+    $this->sheet = reset($keys);
+  }
 
   /*    Title: 	set_sheet
       Purpose:	
@@ -123,20 +144,6 @@ function set_sheet($sheet='')
   {
     return array_keys($this->data);;
   } /* sheets */
-
-  
-  public function __construct($data) 
-  {
-    $this->data = $data;
-    $this->range = [];
-    foreach($data as $sheet => $x) {
-      $this->range[$sheet] = ['A1',
-                              self::column_convert(count(reset($this->data[$sheet]))).
-                              count($this->data[$sheet])];
-    }
-    $keys = array_keys($data);
-    $this->sheet = reset($keys);
-  }
 
   /*    Title: 	xlget
         Purpose:	read data using excel referencing
